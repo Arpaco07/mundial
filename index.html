@@ -244,193 +244,209 @@ body{background:var(--blk);color:var(--tx);font-family:'Inter',sans-serif;font-s
   <a class="ftlink" href="https://arpaco07.github.io/mundial/">arpaco07.github.io/mundial/</a>
 </footer>
 <script>
-var ESPN='https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
-var ESPN_STAND='https://site.web.api.espn.com/apis/v2/sports/soccer/fifa.world/standings';
+var API_KEY = '2a76c132f01da724178b9df8954ef5e3';
+var API_BASE = 'https://v3.football.api-sports.io';
+var _liveTimer = null;
 
-// ESPN abbreviation -> our data-h/data-a codes
-var ESPN_MAP={
-  'MEX':'MEX','RSA':'ZAF','ZAF':'ZAF','KOR':'KOR','CZE':'CZE','CAN':'CAN',
-  'BIH':'BIH','QAT':'QAT','SUI':'SUI','SWI':'SUI','BRA':'BRA','MAR':'MAR',
-  'MOR':'MAR','HAI':'HAI','SCO':'SCO','USA':'USA','PAR':'PAR','AUS':'AUS',
-  'TUR':'TUR','GER':'GER','GHA':'GHA','CUW':'CUW','NED':'NED','HOL':'NED',
-  'JPN':'JPN','CIV':'CIV','ECU':'ECU','SWE':'SWE','TUN':'TUN','ESP':'ESP',
-  'CPV':'CPV','BEL':'BEL','EGY':'EGY','KSA':'KSA','SAU':'KSA','URU':'URU',
-  'IRN':'IRN','NZL':'NZL','FRA':'FRA','SEN':'SEN','IRQ':'IRQ','NOR':'NOR',
-  'ARG':'ARG','ALG':'ALG','DZA':'ALG','AUT':'AUT','JOR':'JOR','POR':'POR',
-  'COD':'COD','CGO':'COD','UZB':'UZB','COL':'COL','ENG':'ENG','CRO':'CRO',
-  'PAN':'PAN','JAP':'JPN','SCT':'SCO'
+// API-Sports name -> our data-h/data-a codes
+var NAME_MAP = {
+  'Mexico':'MEX','South Africa':'ZAF','Korea Republic':'KOR','South Korea':'KOR',
+  'Czech Republic':'CZE','Czechia':'CZE','Canada':'CAN','Bosnia and Herzegovina':'BIH','Bosnia':'BIH',
+  'Qatar':'QAT','Switzerland':'SUI','Brazil':'BRA','Morocco':'MAR','Haiti':'HAI',
+  'Scotland':'SCO','USA':'USA','United States':'USA','Paraguay':'PAR','Australia':'AUS',
+  'Turkey':'TUR','Germany':'GER','Curacao':'CUW','Netherlands':'NED','Japan':'JPN',
+  'Ivory Coast':'CIV',"Cote d'Ivoire":'CIV','Ecuador':'ECU','Sweden':'SWE','Tunisia':'TUN',
+  'Spain':'ESP','Cape Verde':'CPV','Belgium':'BEL','Egypt':'EGY',
+  'Saudi Arabia':'KSA','Uruguay':'URU','Iran':'IRN','New Zealand':'NZL',
+  'France':'FRA','Senegal':'SEN','Iraq':'IRQ','Norway':'NOR','Argentina':'ARG',
+  'Algeria':'ALG','Austria':'AUT','Jordan':'JOR','Portugal':'POR',
+  'DR Congo':'COD','Congo DR':'COD','Uzbekistan':'UZB','Colombia':'COL',
+  'England':'ENG','Croatia':'CRO','Ghana':'GHA','Panama':'PAN'
 };
 
-var _liveTimer=null;
+// Our code -> flagcdn ISO
+var ISO_MAP = {
+  'MEX':'mx','ZAF':'za','KOR':'kr','CZE':'cz','CAN':'ca','BIH':'ba','QAT':'qa','SUI':'ch',
+  'BRA':'br','MAR':'ma','HAI':'ht','SCO':'gb-sct','USA':'us','PAR':'py','AUS':'au','TUR':'tr',
+  'GER':'de','CUW':'cw','NED':'nl','JPN':'jp','CIV':'ci','ECU':'ec','SWE':'se','TUN':'tn',
+  'ESP':'es','CPV':'cv','BEL':'be','EGY':'eg','KSA':'sa','URU':'uy','IRN':'ir','NZL':'nz',
+  'FRA':'fr','SEN':'sn','IRQ':'iq','NOR':'no','ARG':'ar','ALG':'dz','AUT':'at','JOR':'jo',
+  'POR':'pt','COD':'cd','UZB':'uz','COL':'co','ENG':'gb-eng','CRO':'hr','GHA':'gh','PAN':'pa'
+};
 
-function setBar(state,msg){
-  document.getElementById('dot').className='dot '+state;
-  document.getElementById('apiTxt').textContent=msg;
+function setBar(state, msg) {
+  document.getElementById('dot').className = 'dot ' + state;
+  document.getElementById('apiTxt').textContent = msg;
 }
 
-function updateScore(card,hScore,aScore,statusName,clock){
-  var cc=card.querySelector('.cc');
-  if(!cc) return;
-  var LIVE=['STATUS_IN_PROGRESS','STATUS_HALFTIME','STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_END_PERIOD'];
-  var FT=['STATUS_FULL_TIME','STATUS_FINAL','STATUS_FINAL_AET','STATUS_FINAL_PEN'];
-  var isLive=LIVE.indexOf(statusName)>=0;
-  var isFT=FT.indexOf(statusName)>=0;
-  if(!isLive&&!isFT) return;
-  var lbl=isLive?(clock||'LIVE'):statusName==='STATUS_FINAL_AET'?'PRÓRROGA':statusName==='STATUS_FINAL_PEN'?'PENS':'FT';
-  var cls=isLive?'lv':statusName==='STATUS_FINAL_AET'||statusName==='STATUS_FINAL_PEN'?'ex':'ft';
-  cc.innerHTML='<div class="sb"><span class="sn">'+hScore+'</span><span class="ssep">-</span><span class="sn">'+aScore+'</span></div><div class="sl '+cls+'">'+lbl+'</div>';
-  if(isLive){
-    card.classList.add('ln');card.classList.remove('done');
-    if(!card.querySelector('.lp')){var p=document.createElement('div');p.className='lp';p.textContent='EN VIVO';card.appendChild(p);}
-    var db=card.closest('.db');if(db) db.classList.add('open');
+function apiGet(path) {
+  return fetch(API_BASE + path, {
+    headers: { 'x-apisports-key': API_KEY }
+  }).then(function(r){ return r.json(); });
+}
+
+function nameToCode(name) {
+  return NAME_MAP[name] || null;
+}
+
+function updateScore(card, hScore, aScore, statusShort, elapsed) {
+  var cc = card.querySelector('.cc');
+  if (!cc) return;
+  var LIVE = ['1H','HT','2H','ET','BT','P','INT'];
+  var FT   = ['FT','AET','PEN'];
+  var isLive = LIVE.indexOf(statusShort) >= 0;
+  var isFT   = FT.indexOf(statusShort) >= 0;
+  if (!isLive && !isFT) return;
+  var lbl = isLive ? (elapsed ? elapsed+"'" : 'LIVE') :
+            statusShort === 'AET' ? 'PRÓRR' :
+            statusShort === 'PEN' ? 'PENS' : 'FT';
+  var cls = isLive ? 'lv' : (statusShort !== 'FT' ? 'ex' : 'ft');
+  cc.innerHTML =
+    '<div class="sb">' +
+      '<span class="sn">'+(hScore !== null ? hScore : '?')+'</span>' +
+      '<span class="ssep">-</span>' +
+      '<span class="sn">'+(aScore !== null ? aScore : '?')+'</span>' +
+    '</div>' +
+    '<div class="sl '+cls+'">'+lbl+'</div>';
+  if (isLive) {
+    card.classList.add('ln'); card.classList.remove('done');
+    if (!card.querySelector('.lp')) {
+      var p = document.createElement('div');
+      p.className = 'lp'; p.textContent = 'EN VIVO';
+      card.appendChild(p);
+    }
+    var db = card.closest('.db'); if (db) db.classList.add('open');
   } else {
-    card.classList.remove('ln');card.classList.add('done');
-    var ex=card.querySelector('.lp');if(ex) ex.remove();
+    card.classList.remove('ln'); card.classList.add('done');
+    var ex = card.querySelector('.lp'); if (ex) ex.remove();
   }
 }
 
-function fmtDateParam(d){
-  return d.getFullYear().toString()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
-}
+// ── FETCH SCORES ─────────────────────────────────────────────
+function fetchScores() {
+  // Get today + yesterday to always show completed games
+  var now = new Date();
+  var yest = new Date(now); yest.setDate(yest.getDate() - 1);
+  function fmt(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  var today = fmt(now), yesterday = fmt(yest);
 
-function processEvents(evs){
-  var lv=0,dn=0;
-  evs.forEach(function(ev){
-    var c=ev.competitions[0];
-    var h=c.competitors.find(function(x){return x.homeAway==='home';});
-    var a=c.competitors.find(function(x){return x.homeAway==='away';});
-    if(!h||!a) return;
-    var hA=ESPN_MAP[(h.team.abbreviation||'').toUpperCase()]||(h.team.abbreviation||'').toUpperCase();
-    var aA=ESPN_MAP[(a.team.abbreviation||'').toUpperCase()]||(a.team.abbreviation||'').toUpperCase();
-    var st=c.status.type;
-    var card=document.querySelector('[data-h="'+hA+'"][data-a="'+aA+'"]');
-    if(card){
-      updateScore(card,h.score,a.score,st.name,c.status.displayClock);
-      if(st.state==='in') lv++;
-      if(st.state==='post') dn++;
-    }
-  });
-  return {lv:lv,dn:dn};
-}
+  setBar('', 'Actualizando resultados...');
 
-function fetchScores(){
-  // Fetch yesterday + today + tomorrow to always show completed and live scores
-  var now=new Date();
-  var yesterday=new Date(now); yesterday.setDate(yesterday.getDate()-1);
-  var tomorrow=new Date(now); tomorrow.setDate(tomorrow.getDate()+1);
-  var dates=[fmtDateParam(yesterday),fmtDateParam(now),fmtDateParam(tomorrow)];
-  
-  var allEvs=[], seen={};
-  var pending=dates.length;
-  
-  dates.forEach(function(d){
-    fetch(ESPN+'?dates='+d)
-      .then(function(r){return r.json();})
-      .then(function(data){
-        (data.events||[]).forEach(function(ev){
-          if(!seen[ev.id]&&ev.season&&ev.season.year===2026){
-            seen[ev.id]=true; allEvs.push(ev);
-          }
-        });
-        pending--;
-        if(pending===0) applyScores();
-      })
-      .catch(function(){pending--;if(pending===0)applyScores();});
-  });
-  
-  function applyScores(){
-    var r=processEvents(allEvs);
-    var timeStr=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-    if(r.lv>0){
-      setBar('live',r.lv+' EN VIVO • '+timeStr);
-      if(_liveTimer) clearTimeout(_liveTimer);
-      _liveTimer=setTimeout(fetchScores,30000);
-    } else if(r.dn>0){
-      setBar('ok',r.dn+' resultado(s) • '+timeStr);
+  // Fetch today's matches
+  Promise.all([
+    apiGet('/fixtures?league=1&season=2026&date='+today),
+    apiGet('/fixtures?league=1&season=2026&date='+yesterday)
+  ]).then(function(results) {
+    var allFixtures = [];
+    results.forEach(function(data){ (data.response||[]).forEach(function(f){ allFixtures.push(f); }); });
+
+    var lv = 0, dn = 0;
+    allFixtures.forEach(function(f) {
+      var hName = f.teams.home.name;
+      var aName = f.teams.away.name;
+      var hCode = nameToCode(hName);
+      var aCode = nameToCode(aName);
+      if (!hCode || !aCode) return;
+      var card = document.querySelector('[data-h="'+hCode+'"][data-a="'+aCode+'"]');
+      if (!card) return;
+      var st = f.fixture.status.short;
+      var elapsed = f.fixture.status.elapsed;
+      updateScore(card, f.goals.home, f.goals.away, st, elapsed);
+      var LIVE = ['1H','HT','2H','ET','BT','P','INT'];
+      var FT   = ['FT','AET','PEN'];
+      if (LIVE.indexOf(st) >= 0) lv++;
+      if (FT.indexOf(st) >= 0) dn++;
+    });
+
+    var timeStr = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+    if (lv > 0) {
+      setBar('live', lv + ' EN VIVO \u2022 ' + timeStr);
+      if (_liveTimer) clearTimeout(_liveTimer);
+      _liveTimer = setTimeout(fetchScores, 30000);
+    } else if (dn > 0) {
+      setBar('ok', dn + ' resultado(s) \u2022 ' + timeStr);
     } else {
-      setBar('ok','Calendario listo • '+timeStr);
+      setBar('ok', 'Calendario listo \u2022 ' + timeStr);
     }
-    // Also refresh standings
+    // Also load standings
     fetchStandings();
-  }
-}
-
-// ── STANDINGS ────────────────────────────────────────────────
-function fetchStandings(){
-  fetch(ESPN_STAND)
-    .then(function(r){return r.json();})
-    .then(function(data){
-      renderStandings(data);
-    })
-    .catch(function(){
-      // Standings not available yet - show placeholder
-      var el=document.getElementById('standings-content');
-      if(el) el.innerHTML='<div style="text-align:center;padding:20px;color:var(--mu);font-size:12px;letter-spacing:1px">Disponible al iniciar el torneo el 11 Jun</div>';
-    });
-}
-
-function renderStandings(data){
-  var el=document.getElementById('standings-content');
-  if(!el) return;
-  
-  var groups=[];
-  // ESPN standings structure: data.standings.entries or data.children
-  var children=(data.children||data.standings&&[data.standings]||[]);
-  
-  if(!children.length){
-    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--mu);font-size:12px">Disponible al iniciar el torneo el 11 Jun</div>';
-    return;
-  }
-  
-  var html='<div class="std-grid">';
-  children.forEach(function(group){
-    var gName=(group.name||group.abbreviation||'Grupo').replace('Group ','GRUPO ').toUpperCase();
-    var entries=group.standings&&group.standings.entries||group.entries||[];
-    if(!entries.length) return;
-    
-    html+='<div class="std-card"><div class="std-hdr">'+gName+'</div>';
-    html+='<table class="std-tbl"><thead><tr><th>EQUIPO</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>PTS</th></tr></thead><tbody>';
-    
-    entries.forEach(function(entry,pos){
-      var team=entry.team||{};
-      var stats={};
-      (entry.stats||[]).forEach(function(s){stats[s.name||s.abbreviation]=s.value||s.displayValue||0;});
-      var pts=stats['points']||stats['pts']||0;
-      var pj=stats['gamesPlayed']||stats['played']||0;
-      var g=stats['wins']||stats['w']||0;
-      var e=stats['ties']||stats['d']||0;
-      var p=stats['losses']||stats['l']||0;
-      var gf=stats['pointsFor']||stats['goalsFor']||stats['gf']||0;
-      var gc=stats['pointsAgainst']||stats['goalsAgainst']||stats['gc']||0;
-      var dg=stats['pointDifferential']||stats['goalDifference']||stats['gd']||(gf-gc)||0;
-      var tAbb=(team.abbreviation||'').toUpperCase();
-      var ourCode=ESPN_MAP[tAbb]||tAbb;
-      var isoCode=({"MEX":"mx","ZAF":"za","KOR":"kr","CZE":"cz","CAN":"ca","BIH":"ba","QAT":"qa","SUI":"ch","BRA":"br","MAR":"ma","HAI":"ht","SCO":"gb-sct","USA":"us","PAR":"py","AUS":"au","TUR":"tr","GER":"de","CUW":"cw","NED":"nl","JPN":"jp","CIV":"ci","ECU":"ec","SWE":"se","TUN":"tn","ESP":"es","CPV":"cv","BEL":"be","EGY":"eg","KSA":"sa","URU":"uy","IRN":"ir","NZL":"nz","FRA":"fr","SEN":"sn","IRQ":"iq","NOR":"no","ARG":"ar","ALG":"dz","AUT":"at","JOR":"jo","POR":"pt","COD":"cd","UZB":"uz","COL":"co","ENG":"gb-eng","CRO":"hr","GHA":"gh","PAN":"pa"})[ourCode]||(ourCode.toLowerCase().slice(0,2));
-      var qualify=pos<2?' std-q':pos===2?' std-q3':'';
-      var tName=team.shortDisplayName||team.displayName||ourCode;
-      var dgStr=dg>0?'+'+dg:dg;
-      html+='<tr class="'+qualify+'"><td><div style="display:flex;align-items:center;gap:5px"><img src="https://flagcdn.com/20x15/'+isoCode+'.png" width="20" height="15" style="border-radius:1px;flex-shrink:0"><span>'+tName+'</span></div></td><td>'+pj+'</td><td>'+g+'</td><td>'+e+'</td><td>'+p+'</td><td>'+gf+'</td><td>'+gc+'</td><td>'+dgStr+'</td><td class="pts">'+pts+'</td></tr>';
-    });
-    html+='</tbody></table></div>';
+  }).catch(function() {
+    setBar('err', 'Sin conexión \u2022 verificar internet');
   });
-  html+='</div>';
-  html+='<div style="margin-top:10px;font-size:10px;color:var(--mu);text-align:center;opacity:.6;letter-spacing:1px"><span style="display:inline-block;width:10px;height:10px;background:#2ecc71;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Avanza directo &nbsp;<span style="display:inline-block;width:10px;height:10px;background:var(--gold);border-radius:2px;margin-right:4px;vertical-align:middle"></span>Mejor 3ro</div>';
-  el.innerHTML=html;
 }
 
-function goSec(id,btn){
-  document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('active');});
-  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('active');});
+// ── FETCH STANDINGS ──────────────────────────────────────────
+function fetchStandings() {
+  apiGet('/standings?league=1&season=2026').then(function(data) {
+    var standings = data.response && data.response[0] && data.response[0].league && data.response[0].league.standings;
+    if (!standings || !standings.length) {
+      document.getElementById('standings-content').innerHTML =
+        '<div style="text-align:center;padding:30px;color:var(--mu);font-size:12px;letter-spacing:1px">Disponible al iniciar el torneo el 11 Jun</div>';
+      return;
+    }
+    renderStandings(standings);
+  }).catch(function() {});
+}
+
+function renderStandings(standings) {
+  var el = document.getElementById('standings-content');
+  if (!el) return;
+  var html = '<div class="std-grid">';
+  standings.forEach(function(group) {
+    if (!group.length) return;
+    var gName = (group[0].group || 'Grupo').toUpperCase();
+    html += '<div class="std-card"><div class="std-hdr">'+gName+'</div>';
+    html += '<table class="std-tbl"><thead><tr>';
+    html += '<th style="text-align:left;padding-left:8px">EQUIPO</th>';
+    html += '<th title="Partidos Jugados">PJ</th><th title="Ganados">G</th><th title="Empates">E</th>';
+    html += '<th title="Perdidos">P</th><th title="Goles a favor">GF</th>';
+    html += '<th title="Goles en contra">GC</th><th title="Diferencia">DG</th>';
+    html += '<th title="Puntos">PTS</th></tr></thead><tbody>';
+    group.forEach(function(team, idx) {
+      var code = nameToCode(team.team.name) || '';
+      var iso  = ISO_MAP[code] || (code.toLowerCase().slice(0,2));
+      var all  = team.all;
+      var dg   = team.goalsDiff;
+      var dgStr = dg > 0 ? '+'+dg : ''+dg;
+      var qualify = idx < 2 ? ' class="std-q"' : idx === 2 ? ' class="std-q3"' : '';
+      var tName = team.team.name;
+      html += '<tr'+qualify+'>';
+      html += '<td style="text-align:left;padding-left:8px"><div style="display:flex;align-items:center;gap:5px">';
+      html += '<img src="https://flagcdn.com/20x15/'+iso+'.png" width="20" height="15" style="border-radius:1px;flex-shrink:0">';
+      html += '<span>'+tName+'</span></div></td>';
+      html += '<td>'+all.played+'</td>';
+      html += '<td>'+all.win+'</td>';
+      html += '<td>'+all.draw+'</td>';
+      html += '<td>'+all.lose+'</td>';
+      html += '<td>'+all.goals.for+'</td>';
+      html += '<td>'+all.goals.against+'</td>';
+      html += '<td>'+dgStr+'</td>';
+      html += '<td class="pts">'+team.points+'</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  });
+  html += '</div>';
+  html += '<div style="margin-top:10px;font-size:10px;color:var(--mu);text-align:center;opacity:.6;letter-spacing:1px">';
+  html += '<span style="display:inline-block;width:10px;height:10px;background:#2ecc71;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Avanza directo &nbsp;';
+  html += '<span style="display:inline-block;width:10px;height:10px;background:var(--gold);border-radius:2px;margin-right:4px;vertical-align:middle"></span>Mejor 3er lugar';
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function goSec(id, btn) {
+  document.querySelectorAll('.sec').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.nb').forEach(function(b){ b.classList.remove('active'); });
   document.getElementById('sec-'+id).classList.add('active');
   btn.classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0, behavior:'smooth'});
 }
-function tog(h){h.parentElement.classList.toggle('open');}
+function tog(h) { h.parentElement.classList.toggle('open'); }
 
-window.addEventListener('load',function(){
-  setBar('ok','Cargando...');
-  setTimeout(fetchScores,800);
-  setInterval(fetchScores,60000);
+window.addEventListener('load', function() {
+  setBar('ok', 'Cargando...');
+  setTimeout(fetchScores, 800);
+  setInterval(fetchScores, 60000);
 });
 </script>
 </body>
