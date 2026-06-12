@@ -244,19 +244,39 @@ body{background:var(--blk);color:var(--tx);font-family:'Inter',sans-serif;font-s
   <a class="ftlink" href="https://arpaco07.github.io/mundial/">arpaco07.github.io/mundial/</a>
 </footer>
 <script>
-var API_KEY = '2a76c132f01da724178b9df8954ef5e3';
+var API_KEY  = '2a76c132f01da724178b9df8954ef5e3';
 var API_BASE = 'https://v3.football.api-sports.io';
 var _liveTimer = null;
 
-// API-Sports name -> our data-h/data-a codes
+// ── safeFetch: directo primero, proxy si falla (igual que Parlay Pro) ─
+async function safeFetch(url, headers) {
+  headers = headers || {};
+  try {
+    var r = await fetch(url, {headers: headers, signal: AbortSignal.timeout(5000)});
+    if (r.ok) return await r.json();
+  } catch(e) {}
+  // Fallback: corsproxy.io
+  try {
+    var r2 = await fetch('https://corsproxy.io/?' + encodeURIComponent(url), {signal: AbortSignal.timeout(6000)});
+    if (r2.ok) { var t = await r2.text(); return JSON.parse(t); }
+  } catch(e) {}
+  return null;
+}
+
+function apiGet(path) {
+  return safeFetch(API_BASE + path, {'x-apisports-key': API_KEY});
+}
+
+// API-Sports team name -> nuestros códigos
 var NAME_MAP = {
   'Mexico':'MEX','South Africa':'ZAF','Korea Republic':'KOR','South Korea':'KOR',
-  'Czech Republic':'CZE','Czechia':'CZE','Canada':'CAN','Bosnia and Herzegovina':'BIH','Bosnia':'BIH',
-  'Qatar':'QAT','Switzerland':'SUI','Brazil':'BRA','Morocco':'MAR','Haiti':'HAI',
-  'Scotland':'SCO','USA':'USA','United States':'USA','Paraguay':'PAR','Australia':'AUS',
-  'Turkey':'TUR','Germany':'GER','Curacao':'CUW','Netherlands':'NED','Japan':'JPN',
-  'Ivory Coast':'CIV',"Cote d'Ivoire":'CIV','Ecuador':'ECU','Sweden':'SWE','Tunisia':'TUN',
-  'Spain':'ESP','Cape Verde':'CPV','Belgium':'BEL','Egypt':'EGY',
+  'Czech Republic':'CZE','Czechia':'CZE','Canada':'CAN',
+  'Bosnia and Herzegovina':'BIH','Bosnia':'BIH','Qatar':'QAT','Switzerland':'SUI',
+  'Brazil':'BRA','Morocco':'MAR','Haiti':'HAI','Scotland':'SCO',
+  'USA':'USA','United States':'USA','Paraguay':'PAR','Australia':'AUS','Turkey':'TUR',
+  'Germany':'GER','Curacao':'CUW','Netherlands':'NED','Japan':'JPN',
+  "Ivory Coast":'CIV',"Cote d'Ivoire":'CIV','Ecuador':'ECU','Sweden':'SWE',
+  'Tunisia':'TUN','Spain':'ESP','Cape Verde':'CPV','Belgium':'BEL','Egypt':'EGY',
   'Saudi Arabia':'KSA','Uruguay':'URU','Iran':'IRN','New Zealand':'NZL',
   'France':'FRA','Senegal':'SEN','Iraq':'IRQ','Norway':'NOR','Argentina':'ARG',
   'Algeria':'ALG','Austria':'AUT','Jordan':'JOR','Portugal':'POR',
@@ -264,7 +284,6 @@ var NAME_MAP = {
   'England':'ENG','Croatia':'CRO','Ghana':'GHA','Panama':'PAN'
 };
 
-// Our code -> flagcdn ISO
 var ISO_MAP = {
   'MEX':'mx','ZAF':'za','KOR':'kr','CZE':'cz','CAN':'ca','BIH':'ba','QAT':'qa','SUI':'ch',
   'BRA':'br','MAR':'ma','HAI':'ht','SCO':'gb-sct','USA':'us','PAR':'py','AUS':'au','TUR':'tr',
@@ -279,15 +298,7 @@ function setBar(state, msg) {
   document.getElementById('apiTxt').textContent = msg;
 }
 
-function apiGet(path) {
-  return fetch(API_BASE + path, {
-    headers: { 'x-apisports-key': API_KEY }
-  }).then(function(r){ return r.json(); });
-}
-
-function nameToCode(name) {
-  return NAME_MAP[name] || null;
-}
+function nameToCode(name) { return NAME_MAP[name] || null; }
 
 function updateScore(card, hScore, aScore, statusShort, elapsed) {
   var cc = card.querySelector('.cc');
@@ -298,22 +309,20 @@ function updateScore(card, hScore, aScore, statusShort, elapsed) {
   var isFT   = FT.indexOf(statusShort) >= 0;
   if (!isLive && !isFT) return;
   var lbl = isLive ? (elapsed ? elapsed+"'" : 'LIVE') :
-            statusShort === 'AET' ? 'PRÓRR' :
-            statusShort === 'PEN' ? 'PENS' : 'FT';
+            statusShort==='AET' ? 'PRÓRR' : statusShort==='PEN' ? 'PENS' : 'FT';
   var cls = isLive ? 'lv' : (statusShort !== 'FT' ? 'ex' : 'ft');
   cc.innerHTML =
     '<div class="sb">' +
-      '<span class="sn">'+(hScore !== null ? hScore : '?')+'</span>' +
+      '<span class="sn">' + (hScore !== null ? hScore : '?') + '</span>' +
       '<span class="ssep">-</span>' +
-      '<span class="sn">'+(aScore !== null ? aScore : '?')+'</span>' +
+      '<span class="sn">' + (aScore !== null ? aScore : '?') + '</span>' +
     '</div>' +
-    '<div class="sl '+cls+'">'+lbl+'</div>';
+    '<div class="sl ' + cls + '">' + lbl + '</div>';
   if (isLive) {
     card.classList.add('ln'); card.classList.remove('done');
     if (!card.querySelector('.lp')) {
       var p = document.createElement('div');
-      p.className = 'lp'; p.textContent = 'EN VIVO';
-      card.appendChild(p);
+      p.className = 'lp'; p.textContent = 'EN VIVO'; card.appendChild(p);
     }
     var db = card.closest('.db'); if (db) db.classList.add('open');
   } else {
@@ -322,70 +331,68 @@ function updateScore(card, hScore, aScore, statusShort, elapsed) {
   }
 }
 
-// ── FETCH SCORES ─────────────────────────────────────────────
-function fetchScores() {
-  // Get today + yesterday to always show completed games
-  var now = new Date();
-  var yest = new Date(now); yest.setDate(yest.getDate() - 1);
+// ── SCORES ───────────────────────────────────────────────────
+async function fetchScores() {
+  var now  = new Date();
+  var yest = new Date(now); yest.setDate(yest.getDate()-1);
   function fmt(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   var today = fmt(now), yesterday = fmt(yest);
 
-  setBar('', 'Actualizando resultados...');
+  setBar('', 'Actualizando...');
 
-  // Fetch today's matches
-  Promise.all([
-    apiGet('/fixtures?league=1&season=2026&date='+today),
-    apiGet('/fixtures?league=1&season=2026&date='+yesterday)
-  ]).then(function(results) {
-    var allFixtures = [];
-    results.forEach(function(data){ (data.response||[]).forEach(function(f){ allFixtures.push(f); }); });
+  var results = await Promise.all([
+    apiGet('/fixtures?league=1&season=2026&date=' + today),
+    apiGet('/fixtures?league=1&season=2026&date=' + yesterday)
+  ]);
 
-    var lv = 0, dn = 0;
-    allFixtures.forEach(function(f) {
-      var hName = f.teams.home.name;
-      var aName = f.teams.away.name;
-      var hCode = nameToCode(hName);
-      var aCode = nameToCode(aName);
-      if (!hCode || !aCode) return;
-      var card = document.querySelector('[data-h="'+hCode+'"][data-a="'+aCode+'"]');
-      if (!card) return;
-      var st = f.fixture.status.short;
-      var elapsed = f.fixture.status.elapsed;
-      updateScore(card, f.goals.home, f.goals.away, st, elapsed);
-      var LIVE = ['1H','HT','2H','ET','BT','P','INT'];
-      var FT   = ['FT','AET','PEN'];
-      if (LIVE.indexOf(st) >= 0) lv++;
-      if (FT.indexOf(st) >= 0) dn++;
-    });
+  if (!results[0] && !results[1]) {
+    setBar('err', 'Sin conexión • verificar internet');
+    return;
+  }
 
-    var timeStr = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-    if (lv > 0) {
-      setBar('live', lv + ' EN VIVO \u2022 ' + timeStr);
-      if (_liveTimer) clearTimeout(_liveTimer);
-      _liveTimer = setTimeout(fetchScores, 30000);
-    } else if (dn > 0) {
-      setBar('ok', dn + ' resultado(s) \u2022 ' + timeStr);
-    } else {
-      setBar('ok', 'Calendario listo \u2022 ' + timeStr);
-    }
-    // Also load standings
-    fetchStandings();
-  }).catch(function() {
-    setBar('err', 'Sin conexión \u2022 verificar internet');
+  var allF = [];
+  results.forEach(function(data){ if(data) (data.response||[]).forEach(function(f){ allF.push(f); }); });
+
+  var lv = 0, dn = 0;
+  allF.forEach(function(f) {
+    var hCode = nameToCode(f.teams.home.name);
+    var aCode = nameToCode(f.teams.away.name);
+    if (!hCode || !aCode) return;
+    var card = document.querySelector('[data-h="'+hCode+'"][data-a="'+aCode+'"]');
+    if (!card) return;
+    var st = f.fixture.status.short;
+    var el = f.fixture.status.elapsed;
+    updateScore(card, f.goals.home, f.goals.away, st, el);
+    var LIVE = ['1H','HT','2H','ET','BT','P','INT'];
+    var FT   = ['FT','AET','PEN'];
+    if (LIVE.indexOf(st) >= 0) lv++;
+    if (FT.indexOf(st) >= 0) dn++;
   });
+
+  var t = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+  if (lv > 0) {
+    setBar('live', lv + ' EN VIVO • ' + t);
+    if (_liveTimer) clearTimeout(_liveTimer);
+    _liveTimer = setTimeout(fetchScores, 30000);
+  } else if (dn > 0) {
+    setBar('ok', dn + ' resultado(s) • ' + t);
+  } else {
+    setBar('ok', 'Calendario listo • ' + t);
+  }
+  fetchStandings();
 }
 
-// ── FETCH STANDINGS ──────────────────────────────────────────
-function fetchStandings() {
-  apiGet('/standings?league=1&season=2026').then(function(data) {
-    var standings = data.response && data.response[0] && data.response[0].league && data.response[0].league.standings;
-    if (!standings || !standings.length) {
-      document.getElementById('standings-content').innerHTML =
-        '<div style="text-align:center;padding:30px;color:var(--mu);font-size:12px;letter-spacing:1px">Disponible al iniciar el torneo el 11 Jun</div>';
-      return;
-    }
-    renderStandings(standings);
-  }).catch(function() {});
+// ── STANDINGS ────────────────────────────────────────────────
+async function fetchStandings() {
+  var data = await apiGet('/standings?league=1&season=2026');
+  if (!data || !data.response || !data.response.length) {
+    var el = document.getElementById('standings-content');
+    if (el) el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--mu);font-size:12px;letter-spacing:1px">Disponible al iniciar el torneo el 11 Jun</div>';
+    return;
+  }
+  var standings = data.response[0].league.standings;
+  if (!standings || !standings.length) return;
+  renderStandings(standings);
 }
 
 function renderStandings(standings) {
@@ -395,34 +402,29 @@ function renderStandings(standings) {
   standings.forEach(function(group) {
     if (!group.length) return;
     var gName = (group[0].group || 'Grupo').toUpperCase();
-    html += '<div class="std-card"><div class="std-hdr">'+gName+'</div>';
+    html += '<div class="std-card"><div class="std-hdr">' + gName + '</div>';
     html += '<table class="std-tbl"><thead><tr>';
     html += '<th style="text-align:left;padding-left:8px">EQUIPO</th>';
-    html += '<th title="Partidos Jugados">PJ</th><th title="Ganados">G</th><th title="Empates">E</th>';
-    html += '<th title="Perdidos">P</th><th title="Goles a favor">GF</th>';
-    html += '<th title="Goles en contra">GC</th><th title="Diferencia">DG</th>';
-    html += '<th title="Puntos">PTS</th></tr></thead><tbody>';
+    html += '<th title="Partidos Jugados">PJ</th><th title="Ganados">G</th>';
+    html += '<th title="Empates">E</th><th title="Perdidos">P</th>';
+    html += '<th title="Goles a favor">GF</th><th title="Goles en contra">GC</th>';
+    html += '<th title="Diferencia de goles">DG</th><th title="Puntos">PTS</th>';
+    html += '</tr></thead><tbody>';
     group.forEach(function(team, idx) {
       var code = nameToCode(team.team.name) || '';
-      var iso  = ISO_MAP[code] || (code.toLowerCase().slice(0,2));
+      var iso  = ISO_MAP[code] || code.toLowerCase().slice(0,2);
       var all  = team.all;
       var dg   = team.goalsDiff;
-      var dgStr = dg > 0 ? '+'+dg : ''+dg;
-      var qualify = idx < 2 ? ' class="std-q"' : idx === 2 ? ' class="std-q3"' : '';
-      var tName = team.team.name;
-      html += '<tr'+qualify+'>';
+      var dgStr = dg > 0 ? '+' + dg : '' + dg;
+      var qClass = idx < 2 ? ' class="std-q"' : idx === 2 ? ' class="std-q3"' : '';
+      html += '<tr' + qClass + '>';
       html += '<td style="text-align:left;padding-left:8px"><div style="display:flex;align-items:center;gap:5px">';
-      html += '<img src="https://flagcdn.com/20x15/'+iso+'.png" width="20" height="15" style="border-radius:1px;flex-shrink:0">';
-      html += '<span>'+tName+'</span></div></td>';
-      html += '<td>'+all.played+'</td>';
-      html += '<td>'+all.win+'</td>';
-      html += '<td>'+all.draw+'</td>';
-      html += '<td>'+all.lose+'</td>';
-      html += '<td>'+all.goals.for+'</td>';
-      html += '<td>'+all.goals.against+'</td>';
-      html += '<td>'+dgStr+'</td>';
-      html += '<td class="pts">'+team.points+'</td>';
-      html += '</tr>';
+      html += '<img src="https://flagcdn.com/20x15/' + iso + '.png" width="20" height="15" style="border-radius:1px;flex-shrink:0">';
+      html += '<span>' + team.team.name + '</span></div></td>';
+      html += '<td>' + all.played + '</td><td>' + all.win + '</td><td>' + all.draw + '</td>';
+      html += '<td>' + all.lose + '</td><td>' + all.goals.for + '</td>';
+      html += '<td>' + all.goals.against + '</td><td>' + dgStr + '</td>';
+      html += '<td class="pts">' + team.points + '</td></tr>';
     });
     html += '</tbody></table></div>';
   });
@@ -437,7 +439,7 @@ function renderStandings(standings) {
 function goSec(id, btn) {
   document.querySelectorAll('.sec').forEach(function(s){ s.classList.remove('active'); });
   document.querySelectorAll('.nb').forEach(function(b){ b.classList.remove('active'); });
-  document.getElementById('sec-'+id).classList.add('active');
+  document.getElementById('sec-' + id).classList.add('active');
   btn.classList.add('active');
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -445,7 +447,7 @@ function tog(h) { h.parentElement.classList.toggle('open'); }
 
 window.addEventListener('load', function() {
   setBar('ok', 'Cargando...');
-  setTimeout(fetchScores, 800);
+  fetchScores();
   setInterval(fetchScores, 60000);
 });
 </script>
