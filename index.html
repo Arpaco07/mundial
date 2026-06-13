@@ -244,30 +244,58 @@ body{background:var(--blk);color:var(--tx);font-family:'Inter',sans-serif;font-s
   <a class="ftlink" href="https://arpaco07.github.io/mundial/">arpaco07.github.io/mundial/</a>
 </footer>
 <script>
+// ════════════ CONFIG ════════════
+var ESPN_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
 var API_KEY  = '2a76c132f01da724178b9df8954ef5e3';
 var API_BASE = 'https://v3.football.api-sports.io';
+var TOURNEY_START = new Date(2026, 5, 11); // Jun 11 2026 (month 0-indexed)
 var _liveTimer = null;
+var _ftCache = {};   // 'YYYYMMDD' -> normalized results (past dates only, immutable)
+var _allResults = {}; // 'HCODE-ACODE' -> latest normalized result
 
-// ── safeFetch: directo primero, proxy si falla (igual que Parlay Pro) ─
-async function safeFetch(url, headers) {
-  headers = headers || {};
-  try {
-    var r = await fetch(url, {headers: headers, signal: AbortSignal.timeout(5000)});
-    if (r.ok) return await r.json();
-  } catch(e) {}
-  // Fallback: corsproxy.io
-  try {
-    var r2 = await fetch('https://corsproxy.io/?' + encodeURIComponent(url), {signal: AbortSignal.timeout(6000)});
-    if (r2.ok) { var t = await r2.text(); return JSON.parse(t); }
-  } catch(e) {}
-  return null;
-}
+// ════════════ EQUIPOS: código → nombre ES, grupo, bandera ISO ════════════
+var TEAMS = {
+  MEX:{n:'M\u00e9xico',g:'A',iso:'mx'},      ZAF:{n:'Sud\u00e1frica',g:'A',iso:'za'},
+  KOR:{n:'Corea del Sur',g:'A',iso:'kr'},    CZE:{n:'Rep. Checa',g:'A',iso:'cz'},
+  CAN:{n:'Canad\u00e1',g:'B',iso:'ca'},      BIH:{n:'Bosnia',g:'B',iso:'ba'},
+  QAT:{n:'Qatar',g:'B',iso:'qa'},            SUI:{n:'Suiza',g:'B',iso:'ch'},
+  BRA:{n:'Brasil',g:'C',iso:'br'},           MAR:{n:'Marruecos',g:'C',iso:'ma'},
+  HAI:{n:'Hait\u00ed',g:'C',iso:'ht'},       SCO:{n:'Escocia',g:'C',iso:'gb-sct'},
+  USA:{n:'EE.UU.',g:'D',iso:'us'},           PAR:{n:'Paraguay',g:'D',iso:'py'},
+  AUS:{n:'Australia',g:'D',iso:'au'},        TUR:{n:'Turqu\u00eda',g:'D',iso:'tr'},
+  GER:{n:'Alemania',g:'E',iso:'de'},         CUW:{n:'Curazao',g:'E',iso:'cw'},
+  CIV:{n:'C. de Marfil',g:'E',iso:'ci'},     ECU:{n:'Ecuador',g:'E',iso:'ec'},
+  NED:{n:'P. Bajos',g:'F',iso:'nl'},         JPN:{n:'Jap\u00f3n',g:'F',iso:'jp'},
+  SWE:{n:'Suecia',g:'F',iso:'se'},           TUN:{n:'T\u00fanez',g:'F',iso:'tn'},
+  BEL:{n:'B\u00e9lgica',g:'G',iso:'be'},     EGY:{n:'Egipto',g:'G',iso:'eg'},
+  IRN:{n:'Ir\u00e1n',g:'G',iso:'ir'},        NZL:{n:'N. Zelanda',g:'G',iso:'nz'},
+  ESP:{n:'Espa\u00f1a',g:'H',iso:'es'},      CPV:{n:'Cabo Verde',g:'H',iso:'cv'},
+  KSA:{n:'A. Saudita',g:'H',iso:'sa'},       URU:{n:'Uruguay',g:'H',iso:'uy'},
+  FRA:{n:'Francia',g:'I',iso:'fr'},          SEN:{n:'Senegal',g:'I',iso:'sn'},
+  IRQ:{n:'Irak',g:'I',iso:'iq'},             NOR:{n:'Noruega',g:'I',iso:'no'},
+  ARG:{n:'Argentina',g:'J',iso:'ar'},        ALG:{n:'Argelia',g:'J',iso:'dz'},
+  AUT:{n:'Austria',g:'J',iso:'at'},          JOR:{n:'Jordania',g:'J',iso:'jo'},
+  POR:{n:'Portugal',g:'K',iso:'pt'},         COD:{n:'RD Congo',g:'K',iso:'cd'},
+  UZB:{n:'Uzbekist\u00e1n',g:'K',iso:'uz'},  COL:{n:'Colombia',g:'K',iso:'co'},
+  ENG:{n:'Inglaterra',g:'L',iso:'gb-eng'},   CRO:{n:'Croacia',g:'L',iso:'hr'},
+  GHA:{n:'Ghana',g:'L',iso:'gh'},            PAN:{n:'Panam\u00e1',g:'L',iso:'pa'}
+};
 
-function apiGet(path) {
-  return safeFetch(API_BASE + path, {'x-apisports-key': API_KEY});
-}
+// ESPN abbreviation → nuestro código
+var ESPN_MAP = {
+  MEX:'MEX', RSA:'ZAF', ZAF:'ZAF', KOR:'KOR', CZE:'CZE', CAN:'CAN',
+  BIH:'BIH', QAT:'QAT', SUI:'SUI', SWI:'SUI', BRA:'BRA', MAR:'MAR',
+  MOR:'MAR', HAI:'HAI', SCO:'SCO', USA:'USA', PAR:'PAR', AUS:'AUS',
+  TUR:'TUR', GER:'GER', CUW:'CUW', NED:'NED', HOL:'NED', JPN:'JPN',
+  CIV:'CIV', ECU:'ECU', SWE:'SWE', TUN:'TUN', ESP:'ESP', CPV:'CPV',
+  BEL:'BEL', EGY:'EGY', KSA:'KSA', SAU:'KSA', URU:'URU', IRN:'IRN',
+  NZL:'NZL', FRA:'FRA', SEN:'SEN', IRQ:'IRQ', NOR:'NOR', ARG:'ARG',
+  ALG:'ALG', DZA:'ALG', AUT:'AUT', JOR:'JOR', POR:'POR', COD:'COD',
+  CGO:'COD', UZB:'UZB', COL:'COL', ENG:'ENG', CRO:'CRO', GHA:'GHA',
+  PAN:'PAN'
+};
 
-// API-Sports team name -> nuestros códigos
+// API-Sports nombre de equipo → nuestro código
 var NAME_MAP = {
   'Mexico':'MEX','South Africa':'ZAF','Korea Republic':'KOR','South Korea':'KOR',
   'Czech Republic':'CZE','Czechia':'CZE','Canada':'CAN',
@@ -275,181 +303,339 @@ var NAME_MAP = {
   'Brazil':'BRA','Morocco':'MAR','Haiti':'HAI','Scotland':'SCO',
   'USA':'USA','United States':'USA','Paraguay':'PAR','Australia':'AUS','Turkey':'TUR',
   'Germany':'GER','Curacao':'CUW','Netherlands':'NED','Japan':'JPN',
-  "Ivory Coast":'CIV',"Cote d'Ivoire":'CIV','Ecuador':'ECU','Sweden':'SWE',
-  'Tunisia':'TUN','Spain':'ESP','Cape Verde':'CPV','Belgium':'BEL','Egypt':'EGY',
-  'Saudi Arabia':'KSA','Uruguay':'URU','Iran':'IRN','New Zealand':'NZL',
-  'France':'FRA','Senegal':'SEN','Iraq':'IRQ','Norway':'NOR','Argentina':'ARG',
-  'Algeria':'ALG','Austria':'AUT','Jordan':'JOR','Portugal':'POR',
-  'DR Congo':'COD','Congo DR':'COD','Uzbekistan':'UZB','Colombia':'COL',
-  'England':'ENG','Croatia':'CRO','Ghana':'GHA','Panama':'PAN'
+  'Ivory Coast':'CIV',"Cote d'Ivoire":'CIV','Ecuador':'ECU','Sweden':'SWE',
+  'Tunisia':'TUN','Spain':'ESP','Cape Verde':'CPV','Cape Verde Islands':'CPV',
+  'Belgium':'BEL','Egypt':'EGY','Saudi Arabia':'KSA','Uruguay':'URU',
+  'Iran':'IRN','New Zealand':'NZL','France':'FRA','Senegal':'SEN','Iraq':'IRQ',
+  'Norway':'NOR','Argentina':'ARG','Algeria':'ALG','Austria':'AUT','Jordan':'JOR',
+  'Portugal':'POR','DR Congo':'COD','Congo DR':'COD','Uzbekistan':'UZB',
+  'Colombia':'COL','England':'ENG','Croatia':'CRO','Ghana':'GHA','Panama':'PAN'
 };
 
-var ISO_MAP = {
-  'MEX':'mx','ZAF':'za','KOR':'kr','CZE':'cz','CAN':'ca','BIH':'ba','QAT':'qa','SUI':'ch',
-  'BRA':'br','MAR':'ma','HAI':'ht','SCO':'gb-sct','USA':'us','PAR':'py','AUS':'au','TUR':'tr',
-  'GER':'de','CUW':'cw','NED':'nl','JPN':'jp','CIV':'ci','ECU':'ec','SWE':'se','TUN':'tn',
-  'ESP':'es','CPV':'cv','BEL':'be','EGY':'eg','KSA':'sa','URU':'uy','IRN':'ir','NZL':'nz',
-  'FRA':'fr','SEN':'sn','IRQ':'iq','NOR':'no','ARG':'ar','ALG':'dz','AUT':'at','JOR':'jo',
-  'POR':'pt','COD':'cd','UZB':'uz','COL':'co','ENG':'gb-eng','CRO':'hr','GHA':'gh','PAN':'pa'
-};
-
+// ════════════ HELPERS ════════════
 function setBar(state, msg) {
-  document.getElementById('dot').className = 'dot ' + state;
-  document.getElementById('apiTxt').textContent = msg;
+  var dot = document.getElementById('dot');
+  var txt = document.getElementById('apiTxt');
+  if (dot) dot.className = 'dot ' + state;
+  if (txt) txt.textContent = msg;
 }
 
-function nameToCode(name) { return NAME_MAP[name] || null; }
+function fmtESPN(d) {
+  return d.getFullYear().toString() +
+    String(d.getMonth() + 1).padStart(2, '0') +
+    String(d.getDate()).padStart(2, '0');
+}
 
-function updateScore(card, hScore, aScore, statusShort, elapsed) {
-  var cc = card.querySelector('.cc');
-  if (!cc) return;
+function fmtAPI(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+// Fetch con timeout manual (compatible con Android viejo) y fallback a proxies
+function safeFetch(url, headers) {
+  headers = headers || {};
+  function ft(u, opts, ms) {
+    return new Promise(function(resolve, reject) {
+      var timer = setTimeout(function(){ reject(new Error('timeout')); }, ms);
+      fetch(u, opts).then(function(r){
+        clearTimeout(timer); resolve(r);
+      }).catch(function(e){ clearTimeout(timer); reject(e); });
+    });
+  }
+  return ft(url, {headers: headers}, 6000)
+    .then(function(r){ if (r.ok) return r.json(); throw new Error('bad'); })
+    .catch(function(){
+      return ft('https://corsproxy.io/?' + encodeURIComponent(url), {headers: headers}, 8000)
+        .then(function(r){ if (r.ok) return r.text().then(JSON.parse); throw new Error('bad'); });
+    })
+    .catch(function(){
+      return ft('https://api.allorigins.win/get?url=' + encodeURIComponent(url), {}, 8000)
+        .then(function(r){ if (r.ok) return r.json(); throw new Error('bad'); })
+        .then(function(o){ if (o && o.contents) return JSON.parse(o.contents); throw new Error('bad'); });
+    })
+    .catch(function(){ return null; });
+}
+
+// ════════════ NORMALIZADORES ════════════
+// Normaliza un evento de ESPN → {h, a, hg, ag, st, clock}
+function normESPN(ev) {
+  if (!ev || !ev.competitions || !ev.competitions[0]) return null;
+  if (!ev.season || ev.season.year !== 2026) return null;
+  var c = ev.competitions[0];
+  var home = null, away = null;
+  (c.competitors || []).forEach(function(x) {
+    if (x.homeAway === 'home') home = x;
+    if (x.homeAway === 'away') away = x;
+  });
+  if (!home || !away) return null;
+  var hCode = ESPN_MAP[(home.team.abbreviation || '').toUpperCase()];
+  var aCode = ESPN_MAP[(away.team.abbreviation || '').toUpperCase()];
+  if (!hCode || !aCode) return null;
+  var stType = c.status && c.status.type || {};
+  var state = stType.state; // 'pre' | 'in' | 'post'
+  var st = state === 'in' ? 'live' : state === 'post' ? 'ft' : 'pre';
+  return {
+    h: hCode, a: aCode,
+    hg: parseInt(home.score, 10),
+    ag: parseInt(away.score, 10),
+    st: st,
+    clock: (c.status && c.status.displayClock) || ''
+  };
+}
+
+// Normaliza un fixture de API-Sports → mismo formato
+function normAPISports(f) {
+  if (!f || !f.teams) return null;
+  var hCode = NAME_MAP[f.teams.home.name];
+  var aCode = NAME_MAP[f.teams.away.name];
+  if (!hCode || !aCode) return null;
+  var short = f.fixture.status.short;
   var LIVE = ['1H','HT','2H','ET','BT','P','INT'];
   var FT   = ['FT','AET','PEN'];
-  var isLive = LIVE.indexOf(statusShort) >= 0;
-  var isFT   = FT.indexOf(statusShort) >= 0;
-  if (!isLive && !isFT) return;
-  var lbl = isLive ? (elapsed ? elapsed+"'" : 'LIVE') :
-            statusShort==='AET' ? 'PRÓRR' : statusShort==='PEN' ? 'PENS' : 'FT';
-  var cls = isLive ? 'lv' : (statusShort !== 'FT' ? 'ex' : 'ft');
+  var st = LIVE.indexOf(short) >= 0 ? 'live' : FT.indexOf(short) >= 0 ? 'ft' : 'pre';
+  var elapsed = f.fixture.status.elapsed;
+  return {
+    h: hCode, a: aCode,
+    hg: f.goals.home, ag: f.goals.away,
+    st: st,
+    clock: elapsed ? elapsed + "'" : ''
+  };
+}
+
+// ════════════ FETCH POR FECHA (ESPN → fallback API-Sports) ════════════
+function getResultsForDate(dateObj, isPast) {
+  var key = fmtESPN(dateObj);
+  // Cache: fechas pasadas no cambian
+  if (isPast && _ftCache[key]) {
+    return Promise.resolve(_ftCache[key]);
+  }
+  // 1. ESPN
+  return safeFetch(ESPN_URL + '?dates=' + key)
+    .then(function(data) {
+      var results = [];
+      var sawValid = false;
+      if (data && data.events) {
+        data.events.forEach(function(ev) {
+          var n = normESPN(ev);
+          if (n) { results.push(n); sawValid = true; }
+        });
+      }
+      // ESPN congelado: fecha pasada con todo en 'pre' → intentar API-Sports
+      var frozen = isPast && results.length > 0 && results.every(function(r){ return r.st === 'pre'; });
+      if ((!sawValid || frozen) ) {
+        return safeFetch(API_BASE + '/fixtures?league=1&season=2026&date=' + fmtAPI(dateObj),
+                         {'x-apisports-key': API_KEY})
+          .then(function(d2) {
+            if (d2 && d2.response && d2.response.length) {
+              var r2 = [];
+              d2.response.forEach(function(f) {
+                var n = normAPISports(f);
+                if (n) r2.push(n);
+              });
+              if (r2.length) return r2;
+            }
+            return results; // quedarse con lo de ESPN aunque sea pre
+          });
+      }
+      return results;
+    })
+    .then(function(results) {
+      // Cachear fechas pasadas que ya tienen todos FT
+      if (isPast && results.length && results.every(function(r){ return r.st === 'ft'; })) {
+        _ftCache[key] = results;
+      }
+      return results;
+    });
+}
+
+// ════════════ ACTUALIZAR TARJETAS ════════════
+function updateCard(r) {
+  var card = document.querySelector('[data-h="' + r.h + '"][data-a="' + r.a + '"]');
+  if (!card) return;
+  var cc = card.querySelector('.cc');
+  if (!cc) return;
+  if (r.st === 'pre') return; // no tocar partidos no iniciados
+
+  var hg = (r.hg === null || isNaN(r.hg)) ? '?' : r.hg;
+  var ag = (r.ag === null || isNaN(r.ag)) ? '?' : r.ag;
+  var lbl, cls;
+  if (r.st === 'live') { lbl = r.clock || 'EN VIVO'; cls = 'lv'; }
+  else { lbl = 'FINAL'; cls = 'ft'; }
+
   cc.innerHTML =
     '<div class="sb">' +
-      '<span class="sn">' + (hScore !== null ? hScore : '?') + '</span>' +
+      '<span class="sn">' + hg + '</span>' +
       '<span class="ssep">-</span>' +
-      '<span class="sn">' + (aScore !== null ? aScore : '?') + '</span>' +
+      '<span class="sn">' + ag + '</span>' +
     '</div>' +
     '<div class="sl ' + cls + '">' + lbl + '</div>';
-  if (isLive) {
-    card.classList.add('ln'); card.classList.remove('done');
+
+  if (r.st === 'live') {
+    card.classList.add('ln');
+    card.classList.remove('done');
     if (!card.querySelector('.lp')) {
       var p = document.createElement('div');
-      p.className = 'lp'; p.textContent = 'EN VIVO'; card.appendChild(p);
+      p.className = 'lp';
+      p.textContent = 'EN VIVO';
+      card.appendChild(p);
     }
-    var db = card.closest('.db'); if (db) db.classList.add('open');
+    var db = card.closest('.db');
+    if (db) db.classList.add('open');
   } else {
-    card.classList.remove('ln'); card.classList.add('done');
-    var ex = card.querySelector('.lp'); if (ex) ex.remove();
+    card.classList.remove('ln');
+    card.classList.add('done');
+    var ex = card.querySelector('.lp');
+    if (ex) ex.remove();
   }
 }
 
-// ── SCORES ───────────────────────────────────────────────────
-async function fetchScores() {
-  var now  = new Date();
-  var yest = new Date(now); yest.setDate(yest.getDate()-1);
-  function fmt(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-  var today = fmt(now), yesterday = fmt(yest);
-
-  setBar('', 'Actualizando...');
-
-  var results = await Promise.all([
-    apiGet('/fixtures?league=1&season=2026&date=' + today),
-    apiGet('/fixtures?league=1&season=2026&date=' + yesterday)
-  ]);
-
-  if (!results[0] && !results[1]) {
-    setBar('err', 'Sin conexión • verificar internet');
-    return;
-  }
-
-  var allF = [];
-  results.forEach(function(data){ if(data) (data.response||[]).forEach(function(f){ allF.push(f); }); });
-
-  var lv = 0, dn = 0;
-  allF.forEach(function(f) {
-    var hCode = nameToCode(f.teams.home.name);
-    var aCode = nameToCode(f.teams.away.name);
-    if (!hCode || !aCode) return;
-    var card = document.querySelector('[data-h="'+hCode+'"][data-a="'+aCode+'"]');
-    if (!card) return;
-    var st = f.fixture.status.short;
-    var el = f.fixture.status.elapsed;
-    updateScore(card, f.goals.home, f.goals.away, st, el);
-    var LIVE = ['1H','HT','2H','ET','BT','P','INT'];
-    var FT   = ['FT','AET','PEN'];
-    if (LIVE.indexOf(st) >= 0) lv++;
-    if (FT.indexOf(st) >= 0) dn++;
+// ════════════ TABLA DE POSICIONES (CALCULADA LOCALMENTE) ════════════
+function computeStandings() {
+  var stats = {};
+  Object.keys(TEAMS).forEach(function(c) {
+    stats[c] = {code: c, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, pts: 0};
   });
-
-  var t = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-  if (lv > 0) {
-    setBar('live', lv + ' EN VIVO • ' + t);
-    if (_liveTimer) clearTimeout(_liveTimer);
-    _liveTimer = setTimeout(fetchScores, 30000);
-  } else if (dn > 0) {
-    setBar('ok', dn + ' resultado(s) • ' + t);
-  } else {
-    setBar('ok', 'Calendario listo • ' + t);
-  }
-  fetchStandings();
+  Object.keys(_allResults).forEach(function(k) {
+    var r = _allResults[k];
+    if (r.st !== 'ft') return;
+    if (isNaN(r.hg) || isNaN(r.ag) || r.hg === null || r.ag === null) return;
+    var H = stats[r.h], A = stats[r.a];
+    if (!H || !A) return;
+    H.pj++; A.pj++;
+    H.gf += r.hg; H.gc += r.ag;
+    A.gf += r.ag; A.gc += r.hg;
+    if (r.hg > r.ag)      { H.g++; H.pts += 3; A.p++; }
+    else if (r.hg < r.ag) { A.g++; A.pts += 3; H.p++; }
+    else                  { H.e++; A.e++; H.pts++; A.pts++; }
+  });
+  var groups = {};
+  Object.keys(TEAMS).forEach(function(c) {
+    var g = TEAMS[c].g;
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(stats[c]);
+  });
+  Object.keys(groups).forEach(function(g) {
+    groups[g].sort(function(x, y) {
+      return (y.pts - x.pts) ||
+             ((y.gf - y.gc) - (x.gf - x.gc)) ||
+             (y.gf - x.gf) ||
+             x.code.localeCompare(y.code);
+    });
+  });
+  return groups;
 }
 
-// ── STANDINGS ────────────────────────────────────────────────
-async function fetchStandings() {
-  var data = await apiGet('/standings?league=1&season=2026');
-  if (!data || !data.response || !data.response.length) {
-    var el = document.getElementById('standings-content');
-    if (el) el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--mu);font-size:12px;letter-spacing:1px">Disponible al iniciar el torneo el 11 Jun</div>';
-    return;
-  }
-  var standings = data.response[0].league.standings;
-  if (!standings || !standings.length) return;
-  renderStandings(standings);
-}
-
-function renderStandings(standings) {
+function renderStandings() {
   var el = document.getElementById('standings-content');
   if (!el) return;
+  var groups = computeStandings();
+  var letters = ['A','B','C','D','E','F','G','H','I','J','K','L'];
   var html = '<div class="std-grid">';
-  standings.forEach(function(group) {
-    if (!group.length) return;
-    var gName = (group[0].group || 'Grupo').toUpperCase();
-    html += '<div class="std-card"><div class="std-hdr">' + gName + '</div>';
-    html += '<table class="std-tbl"><thead><tr>';
-    html += '<th style="text-align:left;padding-left:8px">EQUIPO</th>';
-    html += '<th title="Partidos Jugados">PJ</th><th title="Ganados">G</th>';
-    html += '<th title="Empates">E</th><th title="Perdidos">P</th>';
-    html += '<th title="Goles a favor">GF</th><th title="Goles en contra">GC</th>';
-    html += '<th title="Diferencia de goles">DG</th><th title="Puntos">PTS</th>';
-    html += '</tr></thead><tbody>';
-    group.forEach(function(team, idx) {
-      var code = nameToCode(team.team.name) || '';
-      var iso  = ISO_MAP[code] || code.toLowerCase().slice(0,2);
-      var all  = team.all;
-      var dg   = team.goalsDiff;
+  letters.forEach(function(g) {
+    var teams = groups[g];
+    if (!teams) return;
+    html += '<div class="std-card"><div class="std-hdr">GRUPO ' + g + '</div>';
+    html += '<table class="std-tbl"><thead><tr>' +
+      '<th style="text-align:left;padding-left:8px">EQUIPO</th>' +
+      '<th>PJ</th><th>G</th><th>E</th><th>P</th>' +
+      '<th>GF</th><th>GC</th><th>DG</th><th>PTS</th></tr></thead><tbody>';
+    teams.forEach(function(t, idx) {
+      var info = TEAMS[t.code];
+      var dg = t.gf - t.gc;
       var dgStr = dg > 0 ? '+' + dg : '' + dg;
-      var qClass = idx < 2 ? ' class="std-q"' : idx === 2 ? ' class="std-q3"' : '';
-      html += '<tr' + qClass + '>';
-      html += '<td style="text-align:left;padding-left:8px"><div style="display:flex;align-items:center;gap:5px">';
-      html += '<img src="https://flagcdn.com/20x15/' + iso + '.png" width="20" height="15" style="border-radius:1px;flex-shrink:0">';
-      html += '<span>' + team.team.name + '</span></div></td>';
-      html += '<td>' + all.played + '</td><td>' + all.win + '</td><td>' + all.draw + '</td>';
-      html += '<td>' + all.lose + '</td><td>' + all.goals.for + '</td>';
-      html += '<td>' + all.goals.against + '</td><td>' + dgStr + '</td>';
-      html += '<td class="pts">' + team.points + '</td></tr>';
+      var cls = idx < 2 ? ' class="std-q"' : idx === 2 ? ' class="std-q3"' : '';
+      html += '<tr' + cls + '>' +
+        '<td style="text-align:left;padding-left:8px">' +
+          '<div style="display:flex;align-items:center;gap:5px">' +
+            '<img src="https://flagcdn.com/20x15/' + info.iso + '.png" width="20" height="15" style="border-radius:1px;flex-shrink:0" alt="">' +
+            '<span>' + info.n + '</span>' +
+          '</div>' +
+        '</td>' +
+        '<td>' + t.pj + '</td><td>' + t.g + '</td><td>' + t.e + '</td><td>' + t.p + '</td>' +
+        '<td>' + t.gf + '</td><td>' + t.gc + '</td><td>' + dgStr + '</td>' +
+        '<td class="pts">' + t.pts + '</td></tr>';
     });
     html += '</tbody></table></div>';
   });
   html += '</div>';
-  html += '<div style="margin-top:10px;font-size:10px;color:var(--mu);text-align:center;opacity:.6;letter-spacing:1px">';
-  html += '<span style="display:inline-block;width:10px;height:10px;background:#2ecc71;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Avanza directo &nbsp;';
-  html += '<span style="display:inline-block;width:10px;height:10px;background:var(--gold);border-radius:2px;margin-right:4px;vertical-align:middle"></span>Mejor 3er lugar';
-  html += '</div>';
+  html += '<div style="margin-top:10px;font-size:10px;color:var(--mu);text-align:center;opacity:.6;letter-spacing:1px">' +
+    '<span style="display:inline-block;width:10px;height:10px;background:#2ecc71;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Avanza directo &nbsp;' +
+    '<span style="display:inline-block;width:10px;height:10px;background:var(--gold);border-radius:2px;margin-right:4px;vertical-align:middle"></span>Mejor 3er lugar' +
+    '</div>';
   el.innerHTML = html;
 }
 
+// ════════════ REFRESH PRINCIPAL ════════════
+function mainRefresh() {
+  setBar('', 'Actualizando...');
+  var now = new Date();
+  var tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // Todas las fechas desde inicio del torneo hasta mañana
+  var dates = [];
+  var d = new Date(TOURNEY_START);
+  var todayKey = fmtESPN(now);
+  while (d <= tomorrow) {
+    dates.push({obj: new Date(d), isPast: fmtESPN(d) < todayKey});
+    d.setDate(d.getDate() + 1);
+  }
+
+  var promises = dates.map(function(item) {
+    return getResultsForDate(item.obj, item.isPast);
+  });
+
+  Promise.all(promises).then(function(allArrays) {
+    var liveCount = 0, ftCount = 0;
+    allArrays.forEach(function(results) {
+      results.forEach(function(r) {
+        _allResults[r.h + '-' + r.a] = r;
+      });
+    });
+    Object.keys(_allResults).forEach(function(k) {
+      var r = _allResults[k];
+      updateCard(r);
+      if (r.st === 'live') liveCount++;
+      if (r.st === 'ft') ftCount++;
+    });
+    renderStandings();
+
+    var t = new Date().toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'});
+    if (liveCount > 0) {
+      setBar('live', liveCount + ' EN VIVO \u2022 ' + ftCount + ' finalizados \u2022 ' + t);
+      if (_liveTimer) clearTimeout(_liveTimer);
+      _liveTimer = setTimeout(mainRefresh, 30000);
+    } else if (ftCount > 0) {
+      setBar('ok', ftCount + ' resultado(s) \u2022 ' + t);
+    } else {
+      setBar('ok', 'Calendario listo \u2022 ' + t);
+    }
+  }).catch(function() {
+    setBar('err', 'Error de red \u2022 reintentando en 60s');
+  });
+}
+
+// ════════════ NAVEGACIÓN ════════════
 function goSec(id, btn) {
   document.querySelectorAll('.sec').forEach(function(s){ s.classList.remove('active'); });
   document.querySelectorAll('.nb').forEach(function(b){ b.classList.remove('active'); });
-  document.getElementById('sec-' + id).classList.add('active');
+  var sec = document.getElementById('sec-' + id);
+  if (sec) sec.classList.add('active');
   btn.classList.add('active');
-  window.scrollTo({top:0, behavior:'smooth'});
+  window.scrollTo({top: 0, behavior: 'smooth'});
 }
+
 function tog(h) { h.parentElement.classList.toggle('open'); }
 
+// ════════════ BOOT ════════════
 window.addEventListener('load', function() {
-  setBar('ok', 'Cargando...');
-  fetchScores();
-  setInterval(fetchScores, 60000);
+  setBar('ok', 'Cargando resultados...');
+  renderStandings();      // tabla visible al instante (con ceros)
+  mainRefresh();          // luego datos reales
+  setInterval(mainRefresh, 60000);
 });
+
 </script>
 </body>
 </html>
