@@ -60,11 +60,11 @@ body{background:var(--blk);color:var(--tx);font-family:'Inter',sans-serif;font-s
 .vs{font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--gold);letter-spacing:2px}
 .mt{font-size:11px;font-weight:700;background:rgba(255,255,255,.08);padding:2px 7px;border-radius:10px}
 .mv{font-size:9px;color:var(--mu);text-align:center;max-width:76px;line-height:1.3}
-.sb{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.45);border-radius:4px;padding:3px 9px}
+.sb{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.45);border-radius:4px 0 0 4px;padding:4px 10px}
 .sn{font-family:'Bebas Neue',sans-serif;font-size:24px;color:#fff;line-height:1;min-width:14px;text-align:center}
 .ssep{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--mu)}
-.sl{font-size:9px;font-weight:800;letter-spacing:1.5px;text-align:center;margin-top:1px}
-.sl.lv{color:#2ecc71}.sl.ft{color:var(--mu)}.sl.ex{color:var(--gold)}
+.sl{font-size:9px;font-weight:800;letter-spacing:1.5px;text-align:center;padding:4px 8px;border-radius:0 4px 4px 0;background:rgba(0,0,0,.3)}
+.sl.lv{color:#2ecc71;background:rgba(46,204,113,.15)}.sl.ft{color:#aaa;background:rgba(255,255,255,.06)}.sl.ex{color:var(--gold)}
 .lp{position:absolute;top:5px;right:7px;background:#2ecc71;color:#000;font-size:8px;font-weight:800;letter-spacing:2px;padding:1px 5px;border-radius:2px;animation:bk 1.4s infinite}
 .kr{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:3px;color:var(--gold);opacity:.5;padding:12px 0 7px;text-align:center;border-bottom:1px dashed rgba(201,168,76,.17);margin-bottom:6px}
 .km{background:var(--p2);border:1px solid rgba(255,255,255,.06);border-radius:4px;padding:9px 13px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -118,6 +118,29 @@ body{background:var(--blk);color:var(--tx);font-family:'Inter',sans-serif;font-s
 .bk-meta-venue{font-size:9px;color:var(--mu);opacity:.7}
 .bk-live-pill{font-size:8px;font-weight:800;color:#2ecc71;letter-spacing:1px;animation:bk 1.4s infinite}
 .llave-note{font-size:11px;color:var(--mu);text-align:center;padding:12px;opacity:.6;letter-spacing:.5px;line-height:1.6}
+
+/* ── BRACKET VISUAL ── */
+.brk-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:10px 0 16px}
+.brk-stages{display:flex;align-items:stretch;min-width:820px;gap:0}
+.brk-stage{display:flex;flex-direction:column;flex:1;min-width:0}
+.brk-stage-hdr{font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:2px;color:var(--gold);text-align:center;padding:5px 2px 6px;opacity:.65;border-bottom:1px solid rgba(201,168,76,.15);margin-bottom:6px;white-space:nowrap}
+.brk-col{display:flex;flex-direction:column;justify-content:space-around;flex:1;padding:0 3px;gap:4px}
+.brk-slot{background:var(--p2);border:1px solid rgba(255,255,255,.07);border-radius:4px;overflow:hidden;margin:2px 0}
+.brk-slot.live{border-color:#2ecc71}
+.brk-slot.done{border-color:rgba(201,168,76,.25)}
+.brk-slot.final-match{border-color:var(--gold);box-shadow:0 0 14px rgba(201,168,76,.25)}
+.brk-team{display:flex;align-items:center;gap:5px;padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.05)}
+.brk-team:last-child{border-bottom:none}
+.brk-team.winner{background:rgba(201,168,76,.1)}
+.brk-team.winner .brk-name{color:var(--gold);font-weight:700}
+.brk-flag{width:18px;height:13px;border-radius:1px;object-fit:cover;flex-shrink:0}
+.brk-name{font-size:9px;color:#C8C0B0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brk-sc{font-family:'Bebas Neue',sans-serif;font-size:13px;color:#fff;min-width:10px;text-align:right;flex-shrink:0}
+.brk-tbd{font-size:9px;color:var(--mu);font-style:italic;padding:5px 6px;display:block}
+.brk-foot{background:rgba(0,0,0,.3);padding:2px 6px;display:flex;justify-content:space-between;align-items:center}
+.brk-fd{font-size:8px;color:var(--mu)}
+.brk-fv{font-size:8px;color:var(--mu);opacity:.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px}
+.brk-lv{font-size:7px;color:#2ecc71;font-weight:800;letter-spacing:1px;animation:bk 1.4s infinite}
 </style>
 </head>
 <body>
@@ -258,58 +281,24 @@ body{background:var(--blk);color:var(--tx);font-family:'Inter',sans-serif;font-s
 </div>
 
 <div id="sec-llave" class="sec">
-  <div class="ph"><div class="phi">&#127959;</div><div><h2>LLAVE ELIMINATORIA</h2><small>ASÍ VAN PASANDO LAS SELECCIONES</small></div></div>
-
-  <div class="llave-note">
-    Los <strong style="color:var(--gold)">1° y 2° de cada grupo</strong> clasifican directamente a 16avos.<br>
-    Los <strong style="color:var(--gold)">8 mejores terceros</strong> de los 12 grupos también avanzan.<br>
-    A partir de 16avos, eliminación directa a partido único.
+  <div class="ph"><div class="phi">&#127959;</div><div><h2>LLAVE ELIMINATORIA</h2><small>ASÍ VAN AVANZANDO LAS SELECCIONES</small></div></div>
+  <div class="llave-note" style="font-size:11px;color:var(--mu);text-align:center;padding:10px;opacity:.6;line-height:1.7">
+    <strong style="color:var(--gold)">1° y 2° de cada grupo</strong> clasifican directamente &middot;
+    <strong style="color:var(--gold)">8 mejores terceros</strong> también avanzan<br>
+    Eliminación directa a partido único desde 16avos hasta la Final
   </div>
 
-  <!-- FORMATO VISUAL: quién clasifica por grupo -->
-  <div class="bracket-phase" style="margin-top:16px">
-    <div class="bracket-phase-hdr">&#127942; CLASIFICADOS POR GRUPO (se actualiza con la tabla)</div>
-    <div id="bracket-classified" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin-top:8px">
-      <!-- Filled dynamically by JS -->
-      <div style="text-align:center;padding:20px;color:var(--mu);font-size:11px;grid-column:1/-1">Disponible al final de la jornada 3</div>
+  <!-- CLASIFICADOS ACTUALES -->
+  <div style="margin:14px 0 8px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:3px;color:var(--gold);opacity:.6;text-align:center;padding:6px 0 8px;border-bottom:1px solid rgba(201,168,76,.15)">&#127942; CLASIFICADOS POR GRUPO</div>
+    <div id="bracket-classified" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px;margin-top:8px">
+      <div style="text-align:center;padding:16px;color:var(--mu);font-size:11px;grid-column:1/-1">Disponible al completarse la jornada 3</div>
     </div>
   </div>
 
-  <div class="bracket-phase">
-    <div class="bracket-phase-hdr">&#9889; 16AVOS DE FINAL &middot; 28 JUN — 3 JUL</div>
-    <div class="bracket-grid"><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">1A</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">Mejor 3°</span></div><div class="bk-meta"><span class="bk-meta-date">28 JUN</span><span class="bk-meta-venue">Cd. México</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">1B</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">Mejor 3°</span></div><div class="bk-meta"><span class="bk-meta-date">28 JUN</span><span class="bk-meta-venue">Nueva Jersey</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">1C</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2I</span></div><div class="bk-meta"><span class="bk-meta-date">29 JUN</span><span class="bk-meta-venue">Philadelphia</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">1F</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2C</span></div><div class="bk-meta"><span class="bk-meta-date">29 JUN</span><span class="bk-meta-venue">Monterrey</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">1D</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2B</span></div><div class="bk-meta"><span class="bk-meta-date">30 JUN</span><span class="bk-meta-venue">Seattle</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">1E</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2F</span></div><div class="bk-meta"><span class="bk-meta-date">30 JUN</span><span class="bk-meta-venue">Cd. México</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">1G</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2H</span></div><div class="bk-meta"><span class="bk-meta-date">1 JUL</span><span class="bk-meta-venue">Houston</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">1H</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2G</span></div><div class="bk-meta"><span class="bk-meta-date">1 JUL</span><span class="bk-meta-venue">Kansas City</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">1I</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2J</span></div><div class="bk-meta"><span class="bk-meta-date">2 JUL</span><span class="bk-meta-venue">Dallas</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">1J</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2K</span></div><div class="bk-meta"><span class="bk-meta-date">2 JUL</span><span class="bk-meta-venue">Los Ángeles</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">1K</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2L</span></div><div class="bk-meta"><span class="bk-meta-date">3 JUL</span><span class="bk-meta-venue">Atlanta</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">1L</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2A</span></div><div class="bk-meta"><span class="bk-meta-date">3 JUL</span><span class="bk-meta-venue">Toronto</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2A</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2B</span></div><div class="bk-meta"><span class="bk-meta-date">3 JUL</span><span class="bk-meta-venue">Vancouver</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2D</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">2E</span></div><div class="bk-meta"><span class="bk-meta-date">3 JUL</span><span class="bk-meta-venue">Boston</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">Mejor 3°</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">Mejor 3°</span></div><div class="bk-meta"><span class="bk-meta-date">3 JUL</span><span class="bk-meta-venue">Monterrey</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">Mejor 3°</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:8px">Mejor 3°</span></div><div class="bk-meta"><span class="bk-meta-date">3 JUL</span><span class="bk-meta-venue">Nueva Jersey</span></div></div></div>
-  </div>
-
-  <div class="bracket-phase">
-    <div class="bracket-phase-hdr">&#127919; OCTAVOS DE FINAL &middot; 4 — 7 JUL</div>
-    <div class="bracket-grid"><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">4 JUL</span><span class="bk-meta-venue">Nueva Jersey</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">4 JUL</span><span class="bk-meta-venue">Dallas</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">5 JUL</span><span class="bk-meta-venue">Los Ángeles</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">5 JUL</span><span class="bk-meta-venue">Cd. México</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">6 JUL</span><span class="bk-meta-venue">Houston</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">6 JUL</span><span class="bk-meta-venue">Atlanta</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">7 JUL</span><span class="bk-meta-venue">Philadelphia</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">7 JUL</span><span class="bk-meta-venue">Kansas City</span></div></div></div>
-  </div>
-
-  <div class="bracket-phase">
-    <div class="bracket-phase-hdr">&#127949; CUARTOS DE FINAL &middot; 9 — 11 JUL</div>
-    <div class="bracket-grid"><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">9 JUL</span><span class="bk-meta-venue">Nueva Jersey</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">10 JUL</span><span class="bk-meta-venue">Los Ángeles</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">10 JUL</span><span class="bk-meta-venue">Dallas</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">11 JUL</span><span class="bk-meta-venue">Atlanta</span></div></div></div>
-  </div>
-
-  <div class="bracket-phase">
-    <div class="bracket-phase-hdr">&#128293; SEMIFINALES &middot; 14 — 15 JUL</div>
-    <div class="bracket-grid"><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">14 JUL</span><span class="bk-meta-venue">Dallas</span></div></div><div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">15 JUL</span><span class="bk-meta-venue">Nueva Jersey</span></div></div></div>
-  </div>
-
-  <div class="bracket-phase">
-    <div class="bracket-phase-hdr">&#127942; GRAN FINAL &middot; 19 JUL</div>
-    <div class="bracket-grid" style="max-width:240px">
-      <div class="bk-match fm" style="border-color:var(--gold)">
-        <div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div>
-        <div class="bk-meta"><span class="bk-meta-date" style="color:var(--gold);font-weight:700">DOM 19 JUL &middot; 11:00</span><span class="bk-meta-venue">MetLife NJ</span></div>
-      </div>
-    </div>
-    <div class="bracket-phase" style="margin-top:10px">
-      <div class="bracket-phase-hdr" style="font-size:11px">&#129351; 3ER LUGAR &middot; 18 JUL &middot; MIAMI</div>
-      <div class="bracket-grid" style="max-width:240px">
-        <div class="bk-match"><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-team"><span class="bk-tbd" style="padding-left:32px">Por definir</span></div><div class="bk-meta"><span class="bk-meta-date">SÁB 18 JUL</span><span class="bk-meta-venue">Miami</span></div></div>
-      </div>
-    </div>
-  </div>
+  <!-- BRACKET VISUAL -->
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:3px;color:var(--gold);opacity:.6;text-align:center;padding:10px 0 6px;border-bottom:1px solid rgba(201,168,76,.15);margin-bottom:4px">&#127959; CUADRO ELIMINATORIO</div>
+  <div id="brk-main"><div style="text-align:center;padding:20px;color:var(--mu);font-size:11px">Desliza para ver el cuadro completo &#8594;</div></div>
 </div>
 </div>
 <footer class="ft">
@@ -538,12 +527,10 @@ function updateCard(r) {
   else { lbl = 'FINAL'; cls = 'ft'; }
 
   cc.innerHTML =
-    '<div class="sb">' +
-      '<span class="sn">' + hg + '</span>' +
-      '<span class="ssep">-</span>' +
-      '<span class="sn">' + ag + '</span>' +
-    '</div>' +
-    '<div class="sl ' + cls + '">' + lbl + '</div>';
+    '<div style="display:flex;align-items:center;justify-content:center">' +
+      '<div class="sb"><span class="sn">' + hg + '</span><span class="ssep">-</span><span class="sn">' + ag + '</span></div>' +
+      '<div class="sl ' + cls + '">' + lbl + '</div>' +
+    '</div>';
 
   if (r.st === 'live') {
     card.classList.add('ln');
@@ -675,6 +662,7 @@ function mainRefresh() {
     });
     renderStandings();
     renderBracketClassified();
+    renderBracket();
 
     var t = new Date().toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'});
     if (liveCount > 0) {
@@ -735,13 +723,179 @@ function renderBracketClassified() {
   if (html) el.innerHTML = html;
 }
 
+// ── BRACKET DATA ─────────────────────────────────────────────
+// 16 slots R32, keyed by position 0-15
+// We store: {id, hSlot, aSlot, date, venue}
+// hSlot/aSlot are either team codes or group descriptions
+var R32_SLOTS = [
+  {id:'r32-0',  h:'1A', a:'M3', date:'28 JUN', venue:'Cd. México'},
+  {id:'r32-1',  h:'1B', a:'M3', date:'28 JUN', venue:'Nueva Jersey'},
+  {id:'r32-2',  h:'1C', a:'2I', date:'29 JUN', venue:'Philadelphia'},
+  {id:'r32-3',  h:'1F', a:'2C', date:'29 JUN', venue:'Monterrey'},
+  {id:'r32-4',  h:'1D', a:'2B', date:'30 JUN', venue:'Seattle'},
+  {id:'r32-5',  h:'1E', a:'2F', date:'30 JUN', venue:'Cd. México'},
+  {id:'r32-6',  h:'1G', a:'2H', date:'1 JUL', venue:'Houston'},
+  {id:'r32-7',  h:'1H', a:'2G', date:'1 JUL', venue:'Kansas City'},
+  {id:'r32-8',  h:'1I', a:'2J', date:'2 JUL', venue:'Dallas'},
+  {id:'r32-9',  h:'1J', a:'2K', date:'2 JUL', venue:'Los Ángeles'},
+  {id:'r32-10', h:'1K', a:'2L', date:'3 JUL', venue:'Atlanta'},
+  {id:'r32-11', h:'1L', a:'2A', date:'3 JUL', venue:'Toronto'},
+  {id:'r32-12', h:'2A', a:'2B', date:'3 JUL', venue:'Vancouver'},
+  {id:'r32-13', h:'2D', a:'2E', date:'3 JUL', venue:'Boston'},
+  {id:'r32-14', h:'M3', a:'M3', date:'3 JUL', venue:'Monterrey'},
+  {id:'r32-15', h:'M3', a:'M3', date:'3 JUL', venue:'Nueva Jersey'},
+];
+var R16_SLOTS = [
+  {id:'r16-0', h:'W(r32-0)',  a:'W(r32-1)',  date:'4 JUL', venue:'Nueva Jersey'},
+  {id:'r16-1', h:'W(r32-2)',  a:'W(r32-3)',  date:'4 JUL', venue:'Dallas'},
+  {id:'r16-2', h:'W(r32-4)',  a:'W(r32-5)',  date:'5 JUL', venue:'Los Ángeles'},
+  {id:'r16-3', h:'W(r32-6)',  a:'W(r32-7)',  date:'5 JUL', venue:'Cd. México'},
+  {id:'r16-4', h:'W(r32-8)',  a:'W(r32-9)',  date:'6 JUL', venue:'Houston'},
+  {id:'r16-5', h:'W(r32-10)', a:'W(r32-11)', date:'6 JUL', venue:'Atlanta'},
+  {id:'r16-6', h:'W(r32-12)', a:'W(r32-13)', date:'7 JUL', venue:'Philadelphia'},
+  {id:'r16-7', h:'W(r32-14)', a:'W(r32-15)', date:'7 JUL', venue:'Kansas City'},
+];
+var QF_SLOTS = [
+  {id:'qf-0', h:'W(r16-0)', a:'W(r16-1)', date:'9 JUL',  venue:'Nueva Jersey'},
+  {id:'qf-1', h:'W(r16-2)', a:'W(r16-3)', date:'10 JUL', venue:'Los Ángeles'},
+  {id:'qf-2', h:'W(r16-4)', a:'W(r16-5)', date:'10 JUL', venue:'Dallas'},
+  {id:'qf-3', h:'W(r16-6)', a:'W(r16-7)', date:'11 JUL', venue:'Atlanta'},
+];
+var SF_SLOTS = [
+  {id:'sf-0', h:'W(qf-0)', a:'W(qf-1)', date:'14 JUL', venue:'Dallas'},
+  {id:'sf-1', h:'W(qf-2)', a:'W(qf-3)', date:'15 JUL', venue:'Nueva Jersey'},
+];
+var FINAL_SLOT = {id:'final-0', h:'W(sf-0)', a:'W(sf-1)', date:'19 JUL · 11:00', venue:'MetLife NJ'};
+var THIRD_SLOT = {id:'third-0', h:'L(sf-0)', a:'L(sf-1)', date:'18 JUL', venue:'Miami'};
+
+// ── BRACKET STATE ─────────────────────────────────────────────
+// Filled by JS from _allResults + standings
+var _bracketState = {}; // slotId -> {hCode, hName, aCode, aName, hScore, aScore, st}
+
+function buildBracketFromStandings() {
+  var groups = computeStandings();
+  var letters = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+  var ranked = {}; // 'A'->['MEX','KOR',...]
+  letters.forEach(function(g) {
+    ranked[g] = (groups[g] || []).map(function(t){ return t.code; });
+  });
+  // Fill R32 slots with actual teams where known
+  R32_SLOTS.forEach(function(slot) {
+    var hCode = resolveSlot(slot.h, ranked);
+    var aCode = resolveSlot(slot.a, ranked);
+    _bracketState[slot.id] = {
+      hCode: hCode, hName: hCode ? TEAMS[hCode] && TEAMS[hCode].n : null,
+      aCode: aCode, aName: aCode ? TEAMS[aCode] && TEAMS[aCode].n : null,
+      hScore: null, aScore: null, st: 'pre'
+    };
+  });
+}
+
+function resolveSlot(desc, ranked) {
+  // desc like '1A', '2B', 'M3' (mejor tercero)
+  if (!desc || desc === 'M3') return null;
+  var pos = parseInt(desc[0], 10) - 1; // 0-indexed
+  var grp = desc[1];
+  if (ranked[grp] && ranked[grp][pos]) return ranked[grp][pos];
+  return null;
+}
+
+// ── RENDER BRACKET ────────────────────────────────────────────
+function renderBracket() {
+  buildBracketFromStandings();
+  var el = document.getElementById('brk-main');
+  if (!el) return;
+
+  function teamRow(code, name, score, isWinner) {
+    var info = code ? TEAMS[code] : null;
+    var iso  = info ? info.iso : null;
+    var nm   = name || (info ? info.n : null);
+    var wCls = isWinner ? ' winner' : '';
+    if (!code && !name) {
+      return '<div class="brk-tbd">Por definir</div>';
+    }
+    var flagHtml = iso
+      ? '<img class="brk-flag" src="https://flagcdn.com/20x15/'+iso+'.png" alt="">'
+      : '<div class="brk-flag" style="background:var(--p1)"></div>';
+    var scHtml = (score !== null && score !== undefined) ? '<span class="brk-sc">'+score+'</span>' : '';
+    return '<div class="brk-team'+wCls+'">'+flagHtml+'<span class="brk-name">'+(nm||'?')+'</span>'+scHtml+'</div>';
+  }
+
+  function slotHtml(slot, isFinal) {
+    var s = _bracketState[slot.id] || {};
+    var hWin = s.st==='ft' && s.hScore!==null && s.hScore > s.aScore;
+    var aWin = s.st==='ft' && s.aScore!==null && s.aScore > s.hScore;
+    var liveLbl = s.st==='live' ? '<span class="brk-live-lbl">EN VIVO</span>' : '';
+    var slotCls = s.st==='live' ? ' live' : s.st==='ft' ? ' done' : '';
+    if (isFinal) slotCls += ' final-match';
+    return '<div class="brk-slot'+slotCls+'">'
+      + teamRow(s.hCode, s.hName, s.hScore, hWin)
+      + teamRow(s.aCode, s.aName, s.aScore, aWin)
+      + '<div class="brk-footer"><span class="brk-fdate">'+slot.date+'</span>'+liveLbl+'<span class="brk-fven">'+slot.venue+'</span></div>'
+      + '</div>';
+  }
+
+  // Split R32 into 2 groups of 8 for left/right bracket arms
+  function stage(label, slots, isFinalCol) {
+    var inner = slots.map(function(s){ return slotHtml(s, isFinalCol); }).join('');
+    return '<div class="brk-stage"><div class="brk-stage-hdr">'+label+'</div><div class="brk-col">'+inner+'</div></div>';
+  }
+
+  var html = '<div class="brk-wrap"><div class="brk-stages">';
+  html += stage('16AVOS', R32_SLOTS.slice(0,8));
+  html += stage('OCTAVOS', R16_SLOTS.slice(0,4));
+  html += stage('CUARTOS', QF_SLOTS.slice(0,2));
+  html += stage('SEMIS', SF_SLOTS.slice(0,1));
+  html += '<div class="brk-stage"><div class="brk-stage-hdr" style="color:var(--gold);opacity:1">&#127942; FINAL</div><div class="brk-col">'
+    + slotHtml(FINAL_SLOT, true)
+    + '<div style="margin-top:8px;font-size:9px;color:var(--mu);text-align:center;letter-spacing:1px">3ER LUGAR</div>'
+    + slotHtml(THIRD_SLOT, false)
+    + '</div></div>';
+  html += stage('SEMIS', SF_SLOTS.slice(1,2));
+  html += stage('CUARTOS', QF_SLOTS.slice(2,4));
+  html += stage('OCTAVOS', R16_SLOTS.slice(4,8));
+  html += stage('16AVOS', R32_SLOTS.slice(8,16));
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+
+
 // ════════════ BOOT ════════════
 window.addEventListener('load', function() {
   setBar('ok', 'Cargando resultados...');
-  renderStandings();      // tabla visible al instante (con ceros)
-  mainRefresh();          // luego datos reales
+  openTodayBlock();       // abrir día de hoy al instante
+  renderStandings();
+  mainRefresh();
   setInterval(mainRefresh, 60000);
 });
+
+function openTodayBlock() {
+  // Close all day blocks first
+  document.querySelectorAll('.db').forEach(function(b){ b.classList.remove('open'); });
+  // Find today's date string in MX time
+  var now = new Date();
+  var mxDate = new Date(now.toLocaleString('en-US', {timeZone: 'America/Mexico_City'}));
+  var months = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+  var todayDay = mxDate.getDate();
+  var todayMon = months[mxDate.getMonth()];
+  // Find the .db whose .dd text contains today's day number and month
+  var found = false;
+  document.querySelectorAll('.db').forEach(function(b) {
+    var dd = b.querySelector('.dd');
+    if (!dd) return;
+    var txt = dd.textContent.trim();
+    // txt = "23 JUN" or "24 JUN — INAUGURACIÓN"
+    if (txt.indexOf(todayDay + ' ' + todayMon) >= 0) {
+      b.classList.add('open');
+      found = true;
+    }
+  });
+  // If today not found (tournament hasn't started or ended), open last played day
+  if (!found) {
+    var blocks = document.querySelectorAll('.db');
+    if (blocks.length) blocks[0].classList.add('open'); // fallback: first
+  }
+}
 
 </script>
 </body>
