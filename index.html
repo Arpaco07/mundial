@@ -60,11 +60,11 @@ body{background:var(--blk);color:var(--tx);font-family:'Inter',sans-serif;font-s
 .vs{font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--gold);letter-spacing:2px}
 .mt{font-size:11px;font-weight:700;background:rgba(255,255,255,.08);padding:2px 7px;border-radius:10px}
 .mv{font-size:9px;color:var(--mu);text-align:center;max-width:76px;line-height:1.3}
-.sb{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.45);border-radius:4px 0 0 4px;padding:4px 10px}
-.sn{font-family:'Bebas Neue',sans-serif;font-size:24px;color:#fff;line-height:1;min-width:14px;text-align:center}
-.ssep{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--mu)}
-.sl{font-size:9px;font-weight:800;letter-spacing:1.5px;text-align:center;padding:4px 8px;border-radius:0 4px 4px 0;background:rgba(0,0,0,.3)}
-.sl.lv{color:#2ecc71;background:rgba(46,204,113,.15)}.sl.ft{color:#aaa;background:rgba(255,255,255,.06)}.sl.ex{color:var(--gold)}
+.sb{display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(0,0,0,.45);border-radius:6px;padding:5px 12px}
+.sn{font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;line-height:1;min-width:16px;text-align:center}
+.ssep{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--mu)}
+.sl{font-size:9px;font-weight:800;letter-spacing:1.5px;text-align:center;margin-top:2px;padding:2px 0}
+.sl.lv{color:#2ecc71}.sl.ft{color:#888}.sl.ex{color:var(--gold)}
 .lp{position:absolute;top:5px;right:7px;background:#2ecc71;color:#000;font-size:8px;font-weight:800;letter-spacing:2px;padding:1px 5px;border-radius:2px;animation:bk 1.4s infinite}
 .kr{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:3px;color:var(--gold);opacity:.5;padding:12px 0 7px;text-align:center;border-bottom:1px dashed rgba(201,168,76,.17);margin-bottom:6px}
 .km{background:var(--p2);border:1px solid rgba(255,255,255,.06);border-radius:4px;padding:9px 13px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -84,7 +84,7 @@ body{background:var(--blk);color:var(--tx);font-family:'Inter',sans-serif;font-s
 .ftl{width:52px;height:auto;display:block;margin:0 auto 8px;opacity:.88}
 .ftc{font-size:10px;color:var(--mu);opacity:.5;letter-spacing:1px}
 .ftlink{font-size:11px;color:var(--gold);text-decoration:none;display:block;margin-top:8px;opacity:.7}
-@media(max-width:400px){.tn{font-size:11px}.cc{min-width:60px}.vs{font-size:15px}.sn{font-size:20px}}
+@media(max-width:400px){.tn{font-size:11px}.cc{min-width:60px}.vs{font-size:15px}.sn{font-size:20px}.brk-name{font-size:8px}.brk-sc{font-size:11px}.brk-stage-hdr{font-size:9px;letter-spacing:1px}.brk-wrap{padding:6px 0}}
 .std-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;margin:12px 0}
 .std-card{background:var(--p1);border:1px solid var(--br);border-radius:5px;overflow:hidden}
 .std-hdr{background:linear-gradient(90deg,var(--gdk),var(--gold));color:#000;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;padding:6px 11px}
@@ -137,10 +137,10 @@ body{background:var(--blk);color:var(--tx);font-family:'Inter',sans-serif;font-s
 .brk-name{font-size:9px;color:#C8C0B0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brk-sc{font-family:'Bebas Neue',sans-serif;font-size:13px;color:#fff;min-width:10px;text-align:right;flex-shrink:0}
 .brk-tbd{font-size:9px;color:var(--mu);font-style:italic;padding:5px 6px;display:block}
-.brk-foot{background:rgba(0,0,0,.3);padding:2px 6px;display:flex;justify-content:space-between;align-items:center}
-.brk-fd{font-size:8px;color:var(--mu)}
-.brk-fv{font-size:8px;color:var(--mu);opacity:.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px}
-.brk-lv{font-size:7px;color:#2ecc71;font-weight:800;letter-spacing:1px;animation:bk 1.4s infinite}
+.brk-foot{background:rgba(0,0,0,.3);padding:2px 5px;display:flex;justify-content:space-between;align-items:center}
+.brk-fd{font-size:7px;color:var(--mu);letter-spacing:.2px}
+.brk-fv{font-size:7px;color:var(--mu);opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px}
+.brk-lv{font-size:6px;color:#2ecc71;font-weight:800;letter-spacing:1px;animation:bk 1.4s infinite}
 </style>
 </head>
 <body>
@@ -526,11 +526,13 @@ function updateCard(r) {
   if (r.st === 'live') { lbl = r.clock || 'EN VIVO'; cls = 'lv'; }
   else { lbl = 'FINAL'; cls = 'ft'; }
 
+  // Keep venue if present
+  var venueEl = cc.querySelector('.mv');
+  var venueText = venueEl ? venueEl.textContent : '';
   cc.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:center">' +
-      '<div class="sb"><span class="sn">' + hg + '</span><span class="ssep">-</span><span class="sn">' + ag + '</span></div>' +
-      '<div class="sl ' + cls + '">' + lbl + '</div>' +
-    '</div>';
+    '<div class="sb"><span class="sn">' + hg + '</span><span class="ssep">-</span><span class="sn">' + ag + '</span></div>' +
+    '<div class="sl ' + cls + '">' + lbl + '</div>' +
+    (venueText ? '<div class="mv" style="opacity:.5">' + venueText + '</div>' : '');
 
   if (r.st === 'live') {
     card.classList.add('ln');
