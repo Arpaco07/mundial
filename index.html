@@ -608,7 +608,7 @@ function renderStandings() {
       var cls = idx < 2 ? ' class="std-q"' : idx === 2 ? ' class="std-q3"' : '';
       html += '<tr' + cls + '>' +
         '<td style="text-align:left;padding-left:8px">' +
-          '<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;column-column-gap:5px">' +
+          '<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;column-gap:5px">' +
             '<img src="https://flagcdn.com/20x15/' + info.iso + '.png" width="20" height="15" style="border-radius:1px;flex-shrink:0" alt="">' +
             '<span>' + info.n + '</span>' +
           '</div>' +
@@ -713,7 +713,7 @@ function renderBracketClassified() {
       var imgTag = '<img src="https://flagcdn.com/24x18/' + info.iso + '.png" width="24" height="18" style="border-radius:1px;flex-shrink:0" alt="">';
       var nameDiv = '<div style="font-size:11px;font-weight:700;color:#F0E8D0">' + info.n + '</div><div style="font-size:9px;color:var(--mu)">GRP ' + g + ' &bull; ' + t.pts + ' pts</div>';
       var badgeDiv = '<div style="font-size:14px;font-weight:800;color:' + bc + '">' + badge + '&deg;</div>';
-      html += '<div style="background:var(--p2);border:1px solid rgba(255,255,255,.07);border-radius:5px;padding:7px 9px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;column-column-gap:7px">'
+      html += '<div style="background:var(--p2);border:1px solid rgba(255,255,255,.07);border-radius:5px;padding:7px 9px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;column-gap:7px">'
         + imgTag
         + '<div style="flex:1;min-width:0">' + nameDiv + '</div>'
         + badgeDiv
