@@ -172,6 +172,21 @@ body{background:var(--blk);color:var(--tx);font-family:'Inter',sans-serif;font-s
   .lk-final-grid{max-width:100%}
   .lk-phase-hdr{font-size:12px;letter-spacing:2px}
 }
+
+/* ── POSICIONES / STANDINGS ── */
+.std-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;margin:12px 0}
+.std-card{background:var(--p1);border:1px solid var(--br);border-radius:5px;overflow:hidden}
+.std-hdr{background:linear-gradient(90deg,var(--gdk),var(--gold));color:#000;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;padding:6px 11px}
+.std-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.std-tbl thead tr{background:rgba(201,168,76,.08);border-bottom:1px solid rgba(201,168,76,.15)}
+.std-tbl th{padding:5px 4px;color:var(--mu);font-size:9px;font-weight:700;letter-spacing:.5px;text-align:center}
+.std-tbl th:first-child{text-align:left;padding-left:8px}
+.std-tbl td{padding:5px 4px;text-align:center;border-bottom:1px solid rgba(255,255,255,.04);color:var(--tx)}
+.std-tbl td:first-child{text-align:left;padding-left:8px}
+.std-tbl tbody tr:last-child td{border-bottom:none}
+.std-tbl .pts{font-weight:800;color:var(--gold);font-size:12px}
+.std-q td:first-child{border-left:3px solid #2ecc71}
+.std-q3 td:first-child{border-left:3px solid var(--gold)}
 </style>
 </head>
 <body>
