@@ -331,9 +331,9 @@ var ESPN_MAP = {
   NZL:'NZL', FRA:'FRA', SEN:'SEN', IRQ:'IRQ', NOR:'NOR', ARG:'ARG',
   ALG:'ALG', DZA:'ALG', AUT:'AUT', JOR:'JOR', POR:'POR', COD:'COD',
   CGO:'COD', UZB:'UZB', COL:'COL', ENG:'ENG', CRO:'CRO', GHA:'GHA',
-  PAN:'PAN'
+  PAN:'PAN',
+  'RSA':'ZAF'
 };
-
 // API-Sports nombre de equipo \u2192 nuestro c\u00F3digo
 var NAME_MAP = {
   'Mexico':'MEX','South Africa':'ZAF','Korea Republic':'KOR','South Korea':'KOR',
@@ -751,9 +751,15 @@ var BRACKET_DATA = {
 
 // Resolve group slot to actual team from standings
 function resolveGroup(desc, ranked) {
-  if (!desc || desc.indexOf('Mej') >= 0 || desc.indexOf('W') === 0 || desc.indexOf('L') === 0) return null;
+  if (!desc) return null;
+  // If it's a real team code (in TEAMS object), return it directly
+  if (TEAMS[desc]) return desc;
+  // Skip placeholder labels
+  if (desc.indexOf('W') === 0 || desc.indexOf('L') === 0 || desc.indexOf('3') === 0) return null;
+  // Parse group notation like '1A', '2B'
   var pos = parseInt(desc[0], 10) - 1;
   var grp = desc[1];
+  if (isNaN(pos) || !grp) return null;
   return (ranked && ranked[grp] && ranked[grp][pos]) ? ranked[grp][pos] : null;
 }
 
@@ -853,13 +859,13 @@ function buildBracket(ranked) {
   _bk.final=slotData(BRACKET_DATA.final);
   _bk.third=slotData(BRACKET_DATA.third);
 
-  // Fill R32 slots with known teams from group standings
+  // Fill R32 slots - handle both real codes and group notations
   BRACKET_DATA.r32.forEach(function(d){
     var sl=_bk.r32[d.pos];
     var hCode=resolveGroup(d.h,ranked);
     var aCode=resolveGroup(d.a,ranked);
-    sl.h=hCode; sl.hLabel=d.h;
-    sl.a=aCode; sl.aLabel=d.a;
+    sl.h=hCode; sl.hLabel=hCode ? null : d.h;
+    sl.a=aCode; sl.aLabel=aCode ? null : d.a;
     // Check if match already played
     var res=lookupResult(hCode,aCode);
     if(res){ applyResult(sl,hCode,aCode,res); }
