@@ -705,15 +705,15 @@ function renderBracketClassified() {
 var BRACKET_DATA = {
   r32: [
     {pos:0,  h:'2A', a:'2B', date:'DOM 28 JUN', time:'13:00', venue:'Los Ángeles'},
+    {pos:3,  h:'1C', a:'2F', date:'LUN 29 JUN', time:'11:00', venue:'Houston'},
     {pos:1,  h:'1E', a:'3D', date:'LUN 29 JUN', time:'14:30', venue:'Boston'},
     {pos:2,  h:'1F', a:'2C', date:'LUN 29 JUN', time:'19:00', venue:'Monterrey'},
-    {pos:3,  h:'1C', a:'2F', date:'LUN 29 JUN', time:'11:00', venue:'Houston'},
-    {pos:4,  h:'1I', a:'3F', date:'MAR 30 JUN', time:'15:00', venue:'Nueva Jersey'},
     {pos:5,  h:'2E', a:'2I', date:'MAR 30 JUN', time:'11:00', venue:'Dallas'},
-    {pos:6,  h:'1A', a:'3E', date:'MAR 30 JUN', time:'19:00', venue:'Cd. México'},
     {pos:7,  h:'1L', a:'3I', date:'MAR 30 JUN', time:'11:00', venue:'Atlanta'},
-    {pos:8,  h:'1D', a:'3B', date:'MIÉ 1 JUL', time:'17:00', venue:'San Francisco'},
+    {pos:4,  h:'1I', a:'3F', date:'MAR 30 JUN', time:'15:00', venue:'Nueva Jersey'},
+    {pos:6,  h:'1A', a:'3E', date:'MAR 30 JUN', time:'19:00', venue:'Cd. México'},
     {pos:9,  h:'1G', a:'3A', date:'MIÉ 1 JUL', time:'13:00', venue:'Seattle'},
+    {pos:8,  h:'1D', a:'3B', date:'MIÉ 1 JUL', time:'17:00', venue:'San Francisco'},
     {pos:10, h:'1B', a:'3G', date:'MIÉ 1 JUL', time:'17:00', venue:'Toronto'},
     {pos:11, h:'1H', a:'2J', date:'MIÉ 1 JUL', time:'20:00', venue:'Los Ángeles'},
     {pos:12, h:'2K', a:'2L', date:'JUE 2 JUL', time:'13:00', venue:'Vancouver'},
@@ -726,10 +726,10 @@ var BRACKET_DATA = {
     {pos:1, h:'W P74', a:'W P77', date:'SÁB 4 JUL', time:'17:00', venue:'Houston'},
     {pos:2, h:'W P76', a:'W P78', date:'DOM 5 JUL', time:'14:00', venue:'Nueva Jersey'},
     {pos:3, h:'W P79', a:'W P80', date:'DOM 5 JUL', time:'19:00', venue:'Cd. México'},
-    {pos:4, h:'W P81', a:'W P82', date:'LUN 6 JUL', time:'18:00', venue:'Dallas'},
     {pos:5, h:'W P83', a:'W P84', date:'LUN 6 JUL', time:'15:00', venue:'Seattle'},
-    {pos:6, h:'W P85', a:'W P87', date:'MAR 7 JUL', time:'17:00', venue:'Vancouver'},
+    {pos:4, h:'W P81', a:'W P82', date:'LUN 6 JUL', time:'18:00', venue:'Dallas'},
     {pos:7, h:'W P86', a:'W P88', date:'MAR 7 JUL', time:'14:00', venue:'Atlanta'},
+    {pos:6, h:'W P85', a:'W P87', date:'MAR 7 JUL', time:'17:00', venue:'Vancouver'},
   ],
   qf: [
     {pos:0, h:'W Oct1', a:'W Oct2', date:'JUE 9 JUL',   time:'14:00', venue:'Boston'},
@@ -1019,16 +1019,23 @@ function renderR32() {
     return '<div class="cc"><div class="vs">VS</div><div class="mt">'+sl.time+'</div><div class="mv">'+sl.venue+'</div></div>';
   }
 
-  // Group slots by date
+  // Group slots by date, sorted by time
   var byDate = {};
   var dateOrder = [];
   BRACKET_DATA.r32.forEach(function(d) {
     if (!byDate[d.date]) { byDate[d.date] = []; dateOrder.push(d.date); }
     byDate[d.date].push(d.pos);
   });
+  // Sort each day's matches by time
+  dateOrder.forEach(function(date) {
+    byDate[date].sort(function(a, b) {
+      var ta = BRACKET_DATA.r32[a].time || '00:00';
+      var tb = BRACKET_DATA.r32[b].time || '00:00';
+      return ta.localeCompare(tb);
+    });
+  });
 
   var html = '';
-  var isFirst = true;
   dateOrder.forEach(function(date) {
     var posList = byDate[date];
     var cards = '';
@@ -1052,8 +1059,7 @@ function renderR32() {
     var parts = date.split(' ');
     var dayName = parts[0];
     var dayDate = parts.slice(1).join(' ');
-    var openCls = isFirst ? ' open' : '';
-    isFirst = false;
+    var openCls = '';
     html += '<div class="db'+openCls+'"><div class="dh" onclick="tog(this)">'
       + '<div class="dhl"><div class="dn">'+dayName+'</div><div class="dd">'+dayDate+'</div></div>'
       + '<div style="display:flex;align-items:center;column-gap:7px"><span class="dc">'+posList.length+' partidos</span><span class="dch">&#9660;</span></div>'
