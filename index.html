@@ -637,7 +637,6 @@ function mainRefresh() {
     });
     renderStandings();
     renderBracketClassified();
-    refreshBracketState();
     renderBracket();
     renderR32();
 
@@ -880,47 +879,102 @@ function buildBracket(ranked) {
 }
 
 
-
-
-
-// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 BOOT \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-
-// ── RENDER R32 SECTION DINÁMICAMENTE ─────────────────────────
-// Igual que renderBracket() pero llena la sección sec-r32
-// Se llama en mainRefresh() → siempre actualizado sin tocar código
-
-// ── ALGORITMO CENTRAL: ordena y renderiza cualquier ronda ──────────────────
-// Recibe array de slots ya resueltos y los agrupa por día en orden ascendente de hora
-
-
-// ── Helpers compartidos ───────────────────────────────────────────────────
-
-
-
-// ── renderR32: 16avos dinámico ────────────────────────────────────────────
-
-// ── Shared bracket helpers ─────────────────────────────────────────────
-function _buildRanked() {
+function renderBracket() {
+  var el = document.getElementById('brk-main');
+  if (!el) return;
   var groups = computeStandings();
   var letters = ['A','B','C','D','E','F','G','H','I','J','K','L'];
   var ranked = {};
   letters.forEach(function(g){
     ranked[g]=(groups[g]||[]).map(function(t){return t.code;});
   });
-  return ranked;
+  buildBracket(ranked);
+
+  function flagHtml(code) {
+    if(!code) return '<div class="lk-flag-ph"></div>';
+    var info=TEAMS[code];
+    if(!info) return '<div class="lk-flag-ph"></div>';
+    return '<img class="lk-flag" src="https://flagcdn.com/28x21/'+info.iso+'.png" alt="">';
+  }
+  function tname(code,label){
+    if(code&&TEAMS[code]) return TEAMS[code].n;
+    return label||'Por definir';
+  }
+  function trow(code,label,sc,isW){
+    var wc=isW?' lk-winner':'';
+    var dim=(!code&&!label)?' style="opacity:.4;font-style:italic"':'';
+    var scH=(sc!==null&&sc!==undefined)?'<span class="lk-sc">'+sc+'</span>':'';
+    return '<div class="lk-team'+wc+'"'+dim+'>'+flagHtml(code)+'<span class="lk-tname">'+tname(code,label)+'</span>'+scH+'</div>';
+  }
+  function scCol(sl){
+    if(sl.st==='ft'||sl.st==='live'){
+      var lbl=sl.st==='live'?(sl.clock||'LIVE'):'FT';
+      var cls=sl.st==='live'?'lk-lbl-live':'lk-lbl-ft';
+      return '<div class="lk-score-col"><div class="lk-scores">'
+        +'<span class="lk-sn">'+(sl.hg!==null?sl.hg:'?')+'</span>'
+        +'<span class="lk-sdash">-</span>'
+        +'<span class="lk-sn">'+(sl.ag!==null?sl.ag:'?')+'</span>'
+        +'</div><div class="'+cls+'">'+lbl+'</div></div>';
+    }
+    return '<div class="lk-score-col lk-vs-col">'
+      +'<div class="lk-vs-time">'+(sl.time||'')+'</div>'
+      +'<div class="lk-vs-lbl">HRS</div></div>';
+  }
+  function mkCard(sl,hLbl,aLbl,isFin,is3rd){
+    var w=getWinner(sl.h,sl.a,sl.hg,sl.ag);
+    var hW=sl.st==='ft'&&w===sl.h;
+    var aW=sl.st==='ft'&&w===sl.a;
+    var cls='lk-card'+(isFin?' lk-final':is3rd?' lk-third':sl.st==='live'?' lk-live':sl.st==='ft'?' lk-done':'');
+    return '<div class="'+cls+'">'
+      +'<div class="lk-card-body">'
+        +'<div class="lk-teams">'+trow(sl.h,hLbl,sl.hg,hW)+trow(sl.a,aLbl,sl.ag,aW)+'</div>'
+        +scCol(sl)
+      +'</div>'
+      +'<div class="lk-meta">'
+        +'<span class="lk-meta-date">'+(sl.date||'')+'</span>'
+        +'<span class="lk-meta-sep">&middot;</span>'
+        +'<span class="lk-meta-venue">'+(sl.venue||'')+'</span>'
+      +'</div>'
+    +'</div>';
+  }
+  function ph(title,icon,cards){
+    return '<div class="lk-phase">'
+      +'<div class="lk-phase-hdr"><span class="lk-phase-icon">'+icon+'</span>'+title+'</div>'
+      +'<div class="lk-phase-grid">'+cards+'</div>'
+    +'</div>';
+  }
+
+  var c32='',c16='',cqf='',csf='';
+  BRACKET_DATA.r32.forEach(function(d){
+    var sl=_bk.r32[d.pos]||slotData(d);
+    c32+=mkCard(sl,sl.hLabel||d.h,sl.aLabel||d.a,false,false);
+  });
+  BRACKET_DATA.r16.forEach(function(d){
+    var sl=_bk.r16[d.pos]||slotData(d);
+    var p=d.pos;
+    c16+=mkCard(sl,'W P'+(p*2+73),'W P'+(p*2+74),false,false);
+  });
+  BRACKET_DATA.qf.forEach(function(d){
+    var sl=_bk.qf[d.pos]||slotData(d);
+    var p=d.pos;
+    cqf+=mkCard(sl,'Oct.'+(p*2+1),'Oct.'+(p*2+2),false,false);
+  });
+  BRACKET_DATA.sf.forEach(function(d){
+    var sl=_bk.sf[d.pos]||slotData(d);
+    var p=d.pos;
+    csf+=mkCard(sl,'CF '+(p*2+1),'CF '+(p*2+2),false,false);
+  });
+  var fin=mkCard(_bk.final,'Gan. Semifinal 1','Gan. Semifinal 2',true,false);
+  var trd=mkCard(_bk.third,'Perd. Semifinal 1','Perd. Semifinal 2',false,true);
+
+  el.innerHTML=''
+    +ph('DIECISEISAVOS DE FINAL','&#9889;',c32)
+    +ph('OCTAVOS DE FINAL','&#127919;',c16)
+    +ph('CUARTOS DE FINAL','&#127941;',cqf)
+    +ph('SEMIFINALES','&#128293;',csf)
+    +'<div class="lk-phase"><div class="lk-phase-hdr"><span class="lk-phase-icon">&#127942;</span>GRAN FINAL &middot; DOM 19 JUL &middot; 11:00 HRS</div><div class="lk-phase-grid lk-final-grid">'+fin+'</div></div>'
+    +'<div class="lk-phase"><div class="lk-phase-hdr lk-third-hdr"><span class="lk-phase-icon">&#129351;</span>3ER LUGAR &middot; S\u00c1B 18 JUL &middot; 16:00 HRS</div><div class="lk-phase-grid lk-final-grid">'+trd+'</div></div>';
 }
-
-// Called once per refresh cycle - builds _bk from current standings+results
-function refreshBracketState() {
-  buildBracket(_buildRanked());
-}
-
-// ── renderR32: 16avos section ─────────────────────────────────────────
-
-
-// ── renderBracket: LLAVE section ──────────────────────────────────────
-
-
 
 
 
@@ -1016,167 +1070,85 @@ function _mkKOCard(hCode, hLabel, aCode, aLabel, sl, highlight) {
 
 // ── renderR32: 16avos dinámico ────────────────────────────────────────────
 
-
-// ── renderBracket: LLAVE dinámica — todas las rondas ─────────────────────
-function renderBracket() {
-  var el = document.getElementById('brk-main');
-  if (!el) return;
-
+// ── Shared bracket helpers ─────────────────────────────────────────────
+function _buildRanked() {
   var groups = computeStandings();
   var letters = ['A','B','C','D','E','F','G','H','I','J','K','L'];
   var ranked = {};
   letters.forEach(function(g){
-    ranked[g] = (groups[g]||[]).map(function(t){ return t.code; });
+    ranked[g]=(groups[g]||[]).map(function(t){return t.code;});
   });
-  buildBracket(ranked);
+  return ranked;
+}
+
+// Called once per refresh cycle - builds _bk from current standings+results
+function refreshBracketState() {
+  buildBracket(_buildRanked());
+}
+
+// ── renderR32: 16avos section ─────────────────────────────────────────
+function renderR32() {
+  var container = document.getElementById('r32-matches');
+  if (!container) return;
 
   var HIGHLIGHTS = {MEX:1,ARG:1,BRA:1,USA:1,ESP:1,FRA:1,GER:1,ENG:1,POR:1,COL:1};
 
-  function phaseHtml(title, icon, slots, labelFn) {
-    // Build slot objects with date for grouping
-    var slotsWithDate = slots.map(function(d, i) {
-      return { d: d, i: i };
-    });
-
-    // Group by date in order
-    var byDate = {};
-    var dateOrder = [];
-    slotsWithDate.forEach(function(item) {
-      var date = item.d.date || '';
-      if (!byDate[date]) { byDate[date] = []; dateOrder.push(date); }
-      byDate[date].push(item);
-    });
-
-    var cards = '';
-    dateOrder.forEach(function(date) {
-      dateOrder.length > 1 && (cards += '<div class="lk-day-lbl">' + date + '</div>');
-      byDate[date].forEach(function(item) {
-        var d = item.d;
-        var labels = labelFn(item.i, d);
-        var sl = labels.sl;
-        var w = (sl.st==='ft') ? (sl.hg > sl.ag ? labels.hCode : labels.aCode) : null;
-        var hW = sl.st==='ft' && w===labels.hCode;
-        var aW = sl.st==='ft' && w===labels.aCode;
-        var cls = 'lk-card'
-          + (sl.st==='live' ? ' lk-live' : sl.st==='ft' ? ' lk-done' : '')
-          + (labels.isFinal ? ' lk-final' : labels.isThird ? ' lk-third' : '');
-
-        cards += '<div class="' + cls + '">'
-          + '<div class="lk-card-body">'
-          + '<div class="lk-teams">'
-          + _lkTeamRow(labels.hCode, labels.hLabel, sl.hg, hW)
-          + _lkTeamRow(labels.aCode, labels.aLabel, sl.ag, aW)
-          + '</div>'
-          + _lkScoreCol(sl)
-          + '</div>'
-          + '<div class="lk-meta">'
-          + '<span class="lk-meta-date">' + (d.date||'') + '</span>'
-          + '<span class="lk-meta-sep">&middot;</span>'
-          + '<span class="lk-meta-venue">' + (d.venue||'') + '</span>'
-          + '</div></div>';
-      });
-    });
-
-    return '<div class="lk-phase">'
-      + '<div class="lk-phase-hdr"><span class="lk-phase-icon">' + icon + '</span>' + title + '</div>'
-      + '<div class="lk-phase-grid">' + cards + '</div>'
-      + '</div>';
+  function flagR(code) {
+    if (!code) return '<div class="fl"><div style="width:40px;height:30px;background:rgba(255,255,255,.1);border-radius:2px"></div></div>';
+    var info = TEAMS[code];
+    if (!info) return '<div class="fl"><div style="width:40px;height:30px;background:rgba(255,255,255,.1);border-radius:2px"></div></div>';
+    return '<div class="fl"><img src="https://flagcdn.com/40x30/'+info.iso+'.png" width="40" height="30" alt="'+code+'" style="border-radius:2px;display:block"></div>';
   }
-
-  function _lkTeamRow(code, label, sc, isW) {
-    var info = code && TEAMS[code];
-    var flag = info
-      ? '<img class="lk-flag" src="https://flagcdn.com/28x21/' + info.iso + '.png" alt="">'
-      : '<div class="lk-flag-ph"></div>';
-    var name = info ? info.n : (label || 'Por definir');
-    var dim = (!code && !label) ? ' style="opacity:.4;font-style:italic"' : '';
-    var scHtml = (sc !== null && sc !== undefined) ? '<span class="lk-sc">' + sc + '</span>' : '';
-    return '<div class="lk-team' + (isW ? ' lk-winner' : '') + '"' + dim + '>'
-      + flag + '<span class="lk-tname">' + name + '</span>' + scHtml + '</div>';
+  function nameR(code, label) {
+    if (code && TEAMS[code]) return TEAMS[code].n;
+    return label || 'Por definir';
   }
-
-  function _lkScoreCol(sl) {
-    if (sl.st==='ft' || sl.st==='live') {
-      var lbl = sl.st==='live' ? (sl.clock||'LIVE') : 'FT';
-      var cls = sl.st==='live' ? 'lk-lbl-live' : 'lk-lbl-ft';
-      return '<div class="lk-score-col">'
-        + '<div class="lk-scores">'
-        + '<span class="lk-sn">' + (sl.hg!==null?sl.hg:'?') + '</span>'
-        + '<span class="lk-sdash">-</span>'
-        + '<span class="lk-sn">' + (sl.ag!==null?sl.ag:'?') + '</span>'
-        + '</div><div class="' + cls + '">' + lbl + '</div></div>';
+  function ccR(sl) {
+    if (sl.st==='ft'||sl.st==='live') {
+      var lbl = sl.st==='live'?(sl.clock||'LIVE'):'FINAL';
+      var cls = sl.st==='live'?'lv':'ft';
+      return '<div class="cc"><div class="sb"><span class="sn">'+(sl.hg!==null?sl.hg:'?')+'</span><span class="ssep">-</span><span class="sn">'+(sl.ag!==null?sl.ag:'?')+'</span></div><div class="sl '+cls+'">'+lbl+'</div><div class="mv" style="opacity:.5">'+(sl.venue||'')+'</div></div>';
     }
-    return '<div class="lk-score-col lk-vs-col">'
-      + '<div class="lk-vs-time">' + (sl.time||'') + '</div>'
-      + '<div class="lk-vs-lbl">HRS</div></div>';
+    return '<div class="cc"><div class="vs">VS</div><div class="mt">'+(sl.time||'')+'</div><div class="mv">'+(sl.venue||'')+'</div></div>';
   }
+  function mkR(hCode, hLabel, aCode, aLabel, sl, hl) {
+    var w = sl.st==='ft'?(sl.hg>sl.ag?hCode:aCode):null;
+    var cls = 'mc'+(hl?' hl':'')+(sl.st==='live'?' ln':sl.st==='ft'?' done':'');
+    return '<div class="'+cls+'" data-h="'+(hCode||'TBD')+'" data-a="'+(aCode||'TBD')+'">'
+      +'<div class="te">'+flagR(hCode)+'<div class="tn">'+(w===hCode&&w?'<b>':'')+nameR(hCode,hLabel)+(w===hCode&&w?'</b>':'')+'</div><div class="tg">&nbsp;</div></div>'
+      +ccR(sl)
+      +'<div class="te r">'+flagR(aCode)+'<div class="tn">'+(w===aCode&&w?'<b>':'')+nameR(aCode,aLabel)+(w===aCode&&w?'</b>':'')+'</div><div class="tg">&nbsp;</div></div>'
+      +'</div>';
+  }
+
+  // Group by date using array index (BRACKET_DATA already sorted by date+time)
+  var byDate = {}, dateOrder = [];
+  BRACKET_DATA.r32.forEach(function(d, idx) {
+    if (!byDate[d.date]) { byDate[d.date]=[]; dateOrder.push(d.date); }
+    byDate[d.date].push(idx);
+  });
 
   var html = '';
-
-  // R32
-  html += phaseHtml('DIECISEISAVOS DE FINAL', '&#9889;', BRACKET_DATA.r32, function(i, d) {
-    var sl = _bk.r32[d.pos] || slotData(d);
-    return { hCode:sl.h, hLabel:d.h, aCode:sl.a, aLabel:d.a,
-             sl:sl, isFinal:false, isThird:false };
+  dateOrder.forEach(function(date) {
+    var idxList = byDate[date];
+    var parts = date.split(' ');
+    var cards = '';
+    idxList.forEach(function(idx) {
+      var d  = BRACKET_DATA.r32[idx];
+      var sl = _bk.r32[d.pos] || {h:null,a:null,hg:null,ag:null,st:'pre',time:d.time,venue:d.venue};
+      cards += mkR(sl.h, d.h, sl.a, d.a, sl, !!(sl.h && HIGHLIGHTS[sl.h]));
+    });
+    html += '<div class="db"><div class="dh" onclick="tog(this)">'
+      +'<div class="dhl"><div class="dn">'+parts[0]+'</div><div class="dd">'+parts.slice(1).join(' ')+'</div></div>'
+      +'<div style="display:flex;align-items:center;column-gap:7px"><span class="dc">'+idxList.length+' partidos</span><span class="dch">&#9660;</span></div>'
+      +'</div><div class="dm">'+cards+'</div></div>\n';
   });
-
-  // R16
-  html += phaseHtml('OCTAVOS DE FINAL', '&#127919;', BRACKET_DATA.r16, function(i, d) {
-    var sl = _bk.r16[d.pos] || slotData(d);
-    var p = d.pos;
-    return { hCode:sl.h, hLabel:'W P'+(p*2+73), aCode:sl.a, aLabel:'W P'+(p*2+74),
-             sl:sl, isFinal:false, isThird:false };
-  });
-
-  // QF
-  html += phaseHtml('CUARTOS DE FINAL', '&#127941;', BRACKET_DATA.qf, function(i, d) {
-    var sl = _bk.qf[d.pos] || slotData(d);
-    var p = d.pos;
-    return { hCode:sl.h, hLabel:'Oct.'+(p*2+1), aCode:sl.a, aLabel:'Oct.'+(p*2+2),
-             sl:sl, isFinal:false, isThird:false };
-  });
-
-  // SF
-  html += phaseHtml('SEMIFINALES', '&#128293;', BRACKET_DATA.sf, function(i, d) {
-    var sl = _bk.sf[d.pos] || slotData(d);
-    var p = d.pos;
-    return { hCode:sl.h, hLabel:'CF '+(p*2+1), aCode:sl.a, aLabel:'CF '+(p*2+2),
-             sl:sl, isFinal:false, isThird:false };
-  });
-
-  // Final
-  var fin = _bk.final || slotData(BRACKET_DATA.final);
-  html += '<div class="lk-phase"><div class="lk-phase-hdr"><span class="lk-phase-icon">&#127942;</span>GRAN FINAL &middot; DOM 19 JUL &middot; 13:00 HRS</div>'
-    + '<div class="lk-phase-grid lk-final-grid">'
-    + (function(){
-        var w = (fin.st==='ft') ? (fin.hg>fin.ag?fin.h:fin.a) : null;
-        return '<div class="lk-card lk-final"><div class="lk-card-body"><div class="lk-teams">'
-          + _lkTeamRow(fin.h,'Gan. Semi 1',fin.hg,fin.st==='ft'&&w===fin.h)
-          + _lkTeamRow(fin.a,'Gan. Semi 2',fin.ag,fin.st==='ft'&&w===fin.a)
-          + '</div>' + _lkScoreCol({st:fin.st,hg:fin.hg,ag:fin.ag,clock:fin.clock,time:'13:00'})
-          + '</div><div class="lk-meta"><span class="lk-meta-date">DOM 19 JUL</span>'
-          + '<span class="lk-meta-sep">&middot;</span>'
-          + '<span class="lk-meta-venue">MetLife &middot; N. Jersey</span></div></div>';
-      })()
-    + '</div></div>';
-
-  // 3rd place
-  var trd = _bk.third || slotData(BRACKET_DATA.third);
-  html += '<div class="lk-phase"><div class="lk-phase-hdr lk-third-hdr"><span class="lk-phase-icon">&#129351;</span>3ER LUGAR &middot; S&Aacute;B 18 JUL &middot; 14:00 HRS</div>'
-    + '<div class="lk-phase-grid lk-final-grid">'
-    + (function(){
-        return '<div class="lk-card lk-third"><div class="lk-card-body"><div class="lk-teams">'
-          + _lkTeamRow(trd.h,'Perd. Semi 1',trd.hg,false)
-          + _lkTeamRow(trd.a,'Perd. Semi 2',trd.ag,false)
-          + '</div>' + _lkScoreCol({st:trd.st,hg:trd.hg,ag:trd.ag,clock:trd.clock,time:'14:00'})
-          + '</div><div class="lk-meta"><span class="lk-meta-date">S\u00c1B 18 JUL</span>'
-          + '<span class="lk-meta-sep">&middot;</span>'
-          + '<span class="lk-meta-venue">Miami</span></div></div>';
-      })()
-    + '</div></div>';
-
-  el.innerHTML = html;
+  container.innerHTML = html;
 }
+
+// ── renderBracket: LLAVE section ──────────────────────────────────────
+
+
 
 
 
@@ -1187,86 +1159,35 @@ function renderBracket() {
 // Igual que renderBracket() pero llena la sección sec-r32
 // Se llama en mainRefresh() → siempre actualizado sin tocar código
 
-function renderR32() {
-  var container = document.getElementById('r32-matches');
-  if (!container) return;
+// ── ALGORITMO CENTRAL: ordena y renderiza cualquier ronda ──────────────────
+// Recibe array de slots ya resueltos y los agrupa por día en orden ascendente de hora
 
-  // Rebuild bracket state from current standings
-  var groups = computeStandings();
-  var letters = ['A','B','C','D','E','F','G','H','I','J','K','L'];
-  var ranked = {};
-  letters.forEach(function(g){
-    ranked[g] = (groups[g]||[]).map(function(t){ return t.code; });
-  });
-  buildBracket(ranked);
 
-  function flagHtml(code) {
-    if (!code) return '<div class="fl"><div style="width:40px;height:30px;background:rgba(255,255,255,.1);border-radius:2px"></div></div>';
-    var info = TEAMS[code];
-    if (!info) return '<div class="fl"><div style="width:40px;height:30px;background:rgba(255,255,255,.1);border-radius:2px"></div></div>';
-    return '<div class="fl"><img src="https://flagcdn.com/40x30/'+info.iso+'.png" width="40" height="30" alt="'+code+'" style="border-radius:2px;display:block"></div>';
-  }
+// ── Helpers compartidos ───────────────────────────────────────────────────
 
-  function teamName(code, fallback) {
-    if (code && TEAMS[code]) return TEAMS[code].n;
-    return fallback || 'Por definir';
-  }
 
-  function scoreHtml(sl) {
-    if (sl.st === 'ft' || sl.st === 'live') {
-      var lbl = sl.st === 'live' ? (sl.clock || 'LIVE') : 'FINAL';
-      var cls = sl.st === 'live' ? 'lv' : 'ft';
-      return '<div class="cc"><div class="sb"><span class="sn">'+(sl.hg !== null ? sl.hg : '?')+'</span><span class="ssep">-</span><span class="sn">'+(sl.ag !== null ? sl.ag : '?')+'</span></div><div class="sl '+cls+'">'+lbl+'</div><div class="mv" style="opacity:.5">'+sl.venue+'</div></div>';
-    }
-    return '<div class="cc"><div class="vs">VS</div><div class="mt">'+sl.time+'</div><div class="mv">'+sl.venue+'</div></div>';
-  }
 
-  // Group by date using array index (already sorted by time in BRACKET_DATA)
-  var byDate = {};
-  var dateOrder = [];
-  BRACKET_DATA.r32.forEach(function(d, idx) {
-    if (!byDate[d.date]) { byDate[d.date] = []; dateOrder.push(d.date); }
-    byDate[d.date].push(idx);
-  });
 
-  var html = '';
-  dateOrder.forEach(function(date) {
-    var idxList = byDate[date];
-    var cards = '';
-    idxList.forEach(function(idx) {
-      var d = BRACKET_DATA.r32[idx];
-      var pos = d.pos;
-      var sl = _bk.r32[pos] || {h:null,a:null,hg:null,ag:null,st:'pre',time:d.time,venue:d.venue};
-      var hCode = sl.h;
-      var aCode = sl.a;
-      var hLabel = d ? d.h : '';
-      var aLabel = d ? d.a : '';
-      var hl = (hCode === 'MEX' || hCode === 'ARG' || hCode === 'BRA' || hCode === 'USA' || hCode === 'ESP' || hCode === 'FRA' || hCode === 'GER' || hCode === 'ENG' || hCode === 'POR' || hCode === 'COL') ? ' hl' : '';
-      var liveCls = sl.st === 'live' ? ' ln' : sl.st === 'ft' ? ' done' : '';
 
-      cards += '<div class="mc'+hl+liveCls+'" data-h="'+(hCode||'TBD')+'" data-a="'+(aCode||'TBD')+'">'
-        + '<div class="te">'+ flagHtml(hCode) +'<div class="tn">'+ teamName(hCode, hLabel) +'</div><div class="tg">&nbsp;</div></div>'
-        + scoreHtml(sl)
-        + '<div class="te r">'+ flagHtml(aCode) +'<div class="tn">'+ teamName(aCode, aLabel) +'</div><div class="tg">&nbsp;</div></div>'
-        + '</div>';
-    });
+// ── renderR32: 16avos dinámico ────────────────────────────────────────────
 
-    var parts = date.split(' ');
-    var dayName = parts[0];
-    var dayDate = parts.slice(1).join(' ');
-    var openCls = '';
-    html += '<div class="db'+openCls+'"><div class="dh" onclick="tog(this)">'
-      + '<div class="dhl"><div class="dn">'+dayName+'</div><div class="dd">'+dayDate+'</div></div>'
-      + '<div style="display:flex;align-items:center;column-gap:7px"><span class="dc">'+posList.length+' partidos</span><span class="dch">&#9660;</span></div>'
-      + '</div><div class="dm">'+cards+'</div></div>\n';
-  });
-  container.innerHTML = html;
-}
+
+// ── renderBracket: LLAVE dinámica — todas las rondas ─────────────────────
+
+
+
+
+
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 BOOT \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+
+// ── RENDER R32 SECTION DINÁMICAMENTE ─────────────────────────
+// Igual que renderBracket() pero llena la sección sec-r32
+// Se llama en mainRefresh() → siempre actualizado sin tocar código
+
 window.addEventListener('load', function() {
   setBar('ok', 'Cargando resultados...');
   openTodayBlock();
   renderStandings();
-  refreshBracketState();
   renderBracket();
   renderR32();
   mainRefresh();
