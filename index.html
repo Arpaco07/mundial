@@ -537,6 +537,9 @@ function computeStandings() {
     if (isNaN(r.hg) || isNaN(r.ag) || r.hg === null || r.ag === null) return;
     var H = stats[r.h], A = stats[r.a];
     if (!H || !A) return;
+    // SOLO contar partidos de fase de grupos (ambos equipos en el mismo grupo)
+    if (!TEAMS[r.h] || !TEAMS[r.a]) return;
+    if (TEAMS[r.h].g !== TEAMS[r.a].g) return;
     H.pj++; A.pj++;
     H.gf += r.hg; H.gc += r.ag;
     A.gf += r.ag; A.gc += r.hg;
@@ -640,6 +643,7 @@ function mainRefresh() {
     renderBracketClassified();
     renderBracket();
     renderR32();
+    openTodayBlock();
 
     var t = new Date().toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'});
     if (liveCount > 0) {
