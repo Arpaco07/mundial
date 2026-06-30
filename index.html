@@ -321,7 +321,7 @@ body{background:var(--blk);color:var(--tx);font-family:'Inter',sans-serif;font-s
         <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--gold);letter-spacing:2px">RESULTADOS DE PENALES</div>
         <span onclick="closeAdmin()" style="cursor:pointer;color:var(--mu);font-size:20px">&times;</span>
       </div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:12px">Solo aparecen aqu&iacute; los partidos que terminaron empatados. Toca el equipo ganador de penales.</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:12px">Toca el equipo ganador, luego escribe el marcador de penales (opcional) y guarda.</div>
       <div id="admMatchList"></div>
     </div>
   </div>
@@ -989,15 +989,11 @@ function renderBracket() {
     if(sl.st==='ft'||sl.st==='live'){
       var lbl=sl.st==='live'?(sl.clock||'LIVE'):'FT';
       var cls=sl.st==='live'?'lk-lbl-live':'lk-lbl-ft';
-      return '<div class="lk-score-col"><div class="lk-scores">'
-        +'<span class="lk-sn">'+(sl.hg!==null?sl.hg:'?')+'</span>'
-        +'<span class="lk-sdash">-</span>'
-        +'<span class="lk-sn">'+(sl.ag!==null?sl.ag:'?')+'</span>'
-        +'</div><div class="'+cls+'">'+lbl+'</div></div>';
+      var pen=getPenScore(sl.h,sl.a);
+      var penHtml=pen?'<div style="font-size:9px;color:var(--gold);margin-top:1px">pen. '+pen+'</div>':'';
+      return '<div class="lk-score-col"><div class="lk-scores"><span class="lk-sn">'+(sl.hg!==null?sl.hg:'?')+'</span><span class="lk-sdash">-</span><span class="lk-sn">'+(sl.ag!==null?sl.ag:'?')+'</span></div><div class="'+cls+'">'+lbl+'</div>'+penHtml+'</div>';
     }
-    return '<div class="lk-score-col lk-vs-col">'
-      +'<div class="lk-vs-time">'+(sl.time||'')+'</div>'
-      +'<div class="lk-vs-lbl">HRS</div></div>';
+    return '<div class="lk-score-col lk-vs-col"><div class="lk-vs-time">'+(sl.time||'')+'</div><div class="lk-vs-lbl">HRS</div></div>';
   }
   function mkCard(sl,hLbl,aLbl,isFin,is3rd){
     var w=getWinner(sl.h,sl.a,sl.hg,sl.ag);
@@ -1186,7 +1182,9 @@ function renderR32() {
     if (sl.st==='ft'||sl.st==='live') {
       var lbl = sl.st==='live'?(sl.clock||'LIVE'):'FINAL';
       var cls = sl.st==='live'?'lv':'ft';
-      return '<div class="cc"><div class="sb"><span class="sn">'+(sl.hg!==null?sl.hg:'?')+'</span><span class="ssep">-</span><span class="sn">'+(sl.ag!==null?sl.ag:'?')+'</span></div><div class="sl '+cls+'">'+lbl+'</div><div class="mv" style="opacity:.5">'+(sl.venue||'')+'</div></div>';
+      var pen = getPenScore(sl.h, sl.a);
+      var penLine = pen ? '<div style="font-size:8px;color:var(--gold);margin-top:1px">pen. '+pen+'</div>' : '';
+      return '<div class="cc"><div class="sb"><span class="sn">'+(sl.hg!==null?sl.hg:'?')+'</span><span class="ssep">-</span><span class="sn">'+(sl.ag!==null?sl.ag:'?')+'</span></div><div class="sl '+cls+'">'+lbl+'</div>'+penLine+'<div class="mv" style="opacity:.5">'+(sl.venue||'')+'</div></div>';
     }
     return '<div class="cc"><div class="vs">VS</div><div class="mt">'+(sl.time||'')+'</div><div class="mv">'+(sl.venue||'')+'</div></div>';
   }
@@ -1285,7 +1283,9 @@ function renderKOSection(containerId, bkRound, bracketData, labelFn) {
     if (sl.st==='ft'||sl.st==='live') {
       var lbl = sl.st==='live'?(sl.clock||'LIVE'):'FINAL';
       var cls = sl.st==='live'?'lv':'ft';
-      return '<div class="cc"><div class="sb"><span class="sn">'+(sl.hg!==null?sl.hg:'?')+'</span><span class="ssep">-</span><span class="sn">'+(sl.ag!==null?sl.ag:'?')+'</span></div><div class="sl '+cls+'">'+lbl+'</div><div class="mv" style="opacity:.5">'+(sl.venue||'')+'</div></div>';
+      var pen = getPenScore(sl.h, sl.a);
+      var penLine = pen ? '<div style="font-size:8px;color:var(--gold);margin-top:1px">pen. '+pen+'</div>' : '';
+      return '<div class="cc"><div class="sb"><span class="sn">'+(sl.hg!==null?sl.hg:'?')+'</span><span class="ssep">-</span><span class="sn">'+(sl.ag!==null?sl.ag:'?')+'</span></div><div class="sl '+cls+'">'+lbl+'</div>'+penLine+'<div class="mv" style="opacity:.5">'+(sl.venue||'')+'</div></div>';
     }
     return '<div class="cc"><div class="vs">VS</div><div class="mt">'+(sl.time||'')+'</div><div class="mv">'+(sl.venue||'')+'</div></div>';
   }
@@ -1365,7 +1365,9 @@ function renderFinal() {
   function cc(sl) {
     if(sl.st==='ft'||sl.st==='live'){
       var lbl=sl.st==='live'?(sl.clock||'LIVE'):'FINAL';
-      return '<div class="cc"><div class="sb"><span class="sn">'+(sl.hg!==null?sl.hg:'?')+'</span><span class="ssep">-</span><span class="sn">'+(sl.ag!==null?sl.ag:'?')+'</span></div><div class="sl ft">'+lbl+'</div></div>';
+      var pen = getPenScore(sl.h, sl.a);
+      var penLine = pen ? '<div style="font-size:8px;color:var(--gold);margin-top:1px">pen. '+pen+'</div>' : '';
+      return '<div class="cc"><div class="sb"><span class="sn">'+(sl.hg!==null?sl.hg:'?')+'</span><span class="ssep">-</span><span class="sn">'+(sl.ag!==null?sl.ag:'?')+'</span></div><div class="sl ft">'+lbl+'</div>'+penLine+'</div>';
     }
     return '<div class="cc"><div class="vs">VS</div><div class="mt">'+sl.time+'</div><div class="mv">'+sl.venue+'</div></div>';
   }
@@ -1378,8 +1380,13 @@ function renderFinal() {
 }
 
 // ── PANEL ADMIN: resultados de penales ───────────────────────────────
+function getPenScore(h, a) {
+  if (!h || !a) return '';
+  return _penaltyScores[h+'-'+a] || _penaltyScores[a+'-'+h] || '';
+}
 var ADMIN_PIN = '2786';
 var _penaltyOverrides = {};
+var _penaltyScores = {};
 
 function openAdmin() {
   document.getElementById('admOverlay').style.display = 'flex';
@@ -1441,27 +1448,40 @@ function renderAdminMatchList() {
     return;
   }
   var html = '';
-  matches.forEach(function(m) {
+  matches.forEach(function(m, idx) {
     var hName = TEAMS[m.h] ? TEAMS[m.h].n : m.h;
     var aName = TEAMS[m.a] ? TEAMS[m.a].n : m.a;
     var hIso  = TEAMS[m.h] ? TEAMS[m.h].iso : '';
     var aIso  = TEAMS[m.a] ? TEAMS[m.a].iso : '';
     var hSel = m.winner === m.h;
     var aSel = m.winner === m.a;
+    var penKey = m.h + '-' + m.a;
+    var penScore = _penaltyScores[penKey] || _penaltyScores[m.a + '-' + m.h] || '';
     html += '<div class="admRow" style="background:var(--p2);border:1px solid var(--br);border-radius:8px;padding:12px;margin-bottom:10px">'
-      + '<div style="font-size:10px;color:var(--mu);letter-spacing:1px;margin-bottom:8px">'+m.round+' &middot; '+m.hg+'-'+m.ag+' (FT)'+(m.winner?' &middot; <span style="color:#2ecc71">REGISTRADO: '+(TEAMS[m.winner]?TEAMS[m.winner].n:m.winner)+'</span>':'')+'</div>'
-      + '<div style="display:flex;column-gap:8px">'
+      + '<div style="font-size:10px;color:var(--mu);letter-spacing:1px;margin-bottom:8px">'+m.round+' &middot; '+m.hg+'-'+m.ag+' (FT)'+(m.winner?' &middot; <span style="color:#2ecc71">REGISTRADO: '+(TEAMS[m.winner]?TEAMS[m.winner].n:m.winner)+(penScore?' ('+penScore+' pen.)':'')+'</span>':'')+'</div>'
+      + '<div style="display:flex;column-gap:8px;margin-bottom:8px">'
       + '<button class="admPickBtn" data-h="'+m.h+'" data-a="'+m.a+'" data-w="'+m.h+'" style="flex:1;display:flex;align-items:center;justify-content:center;column-gap:6px;padding:10px;background:'+(hSel?'rgba(201,168,76,.2)':'var(--p1)')+';border:1px solid '+(hSel?'var(--gold)':'var(--br)')+';border-radius:6px;color:var(--tx);cursor:pointer;font-size:12px">'
       + (hIso?'<img src="https://flagcdn.com/24x18/'+hIso+'.png" style="border-radius:2px">':'')+'<span>'+hName+'</span></button>'
       + '<button class="admPickBtn" data-h="'+m.h+'" data-a="'+m.a+'" data-w="'+m.a+'" style="flex:1;display:flex;align-items:center;justify-content:center;column-gap:6px;padding:10px;background:'+(aSel?'rgba(201,168,76,.2)':'var(--p1)')+';border:1px solid '+(aSel?'var(--gold)':'var(--br)')+';border-radius:6px;color:var(--tx);cursor:pointer;font-size:12px">'
       + (aIso?'<img src="https://flagcdn.com/24x18/'+aIso+'.png" style="border-radius:2px">':'')+'<span>'+aName+'</span></button>'
+      + '</div>'
+      + '<div style="display:flex;column-gap:8px;align-items:center">'
+      + '<span style="font-size:11px;color:var(--mu)">Penales (opcional):</span>'
+      + '<input type="text" class="admPenInput" data-key="'+penKey+'" placeholder="ej. 4-3" value="'+penScore+'" style="flex:1;padding:6px 8px;background:var(--p1);border:1px solid var(--br);border-radius:4px;color:var(--tx);font-size:12px;max-width:80px">'
+      + '<button class="admSaveScoreBtn" data-key="'+penKey+'" style="padding:6px 10px;background:var(--gold);border:none;border-radius:4px;color:#000;font-size:11px;font-weight:700;cursor:pointer">Guardar</button>'
       + '</div></div>';
   });
   container.innerHTML = html;
-  // Delegación de eventos en los botones (evita problemas de escape de comillas)
   container.querySelectorAll('.admPickBtn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       setPenaltyWinner(btn.getAttribute('data-h'), btn.getAttribute('data-a'), btn.getAttribute('data-w'));
+    });
+  });
+  container.querySelectorAll('.admSaveScoreBtn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var key = btn.getAttribute('data-key');
+      var input = container.querySelector('.admPenInput[data-key="'+key+'"]');
+      setPenaltyScore(key, input ? input.value.trim() : '');
     });
   });
 }
@@ -1475,13 +1495,29 @@ function setPenaltyWinner(h, a, winner) {
   refreshAllRenders();
 }
 
+function setPenaltyScore(key, score) {
+  if (score) {
+    _penaltyScores[key] = score;
+  } else {
+    delete _penaltyScores[key];
+  }
+  savePenaltyScores();
+  renderAdminMatchList();
+  refreshAllRenders();
+}
+
 function savePenaltyOverrides() {
   if (!window.storage) return;
   window.storage.set('penalty_overrides', JSON.stringify(_penaltyOverrides), true).catch(function(){});
 }
+function savePenaltyScores() {
+  if (!window.storage) return;
+  window.storage.set('penalty_scores', JSON.stringify(_penaltyScores), true).catch(function(){});
+}
+
 function loadPenaltyOverrides() {
   if (!window.storage) return Promise.resolve();
-  return window.storage.get('penalty_overrides', true).then(function(res) {
+  var p1 = window.storage.get('penalty_overrides', true).then(function(res) {
     if (res && res.value) {
       try {
         _penaltyOverrides = JSON.parse(res.value);
@@ -1491,6 +1527,12 @@ function loadPenaltyOverrides() {
       } catch(e){}
     }
   }).catch(function(){});
+  var p2 = window.storage.get('penalty_scores', true).then(function(res) {
+    if (res && res.value) {
+      try { _penaltyScores = JSON.parse(res.value); } catch(e){}
+    }
+  }).catch(function(){});
+  return Promise.all([p1, p2]);
 }
 
 function refreshAllRenders() {
