@@ -816,13 +816,27 @@ var QF_TO_SF = {
 };
 var _bk = {r32:{},r16:{},qf:{},sf:{},final:{h:null,a:null,hg:null,ag:null,st:'pre'},third:{h:null,a:null,hg:null,ag:null,st:'pre'}};
 
+var PENALTY_WINNERS = {
+  'GER-PAR': 'PAR'
+};
 function getWinner(h,a,hg,ag){
   if(hg===null||ag===null) return null;
-  return hg>ag?h:ag>hg?a:null;
+  if(hg===ag){
+    var key1=h+'-'+a, key2=a+'-'+h;
+    if(PENALTY_WINNERS[key1]) return PENALTY_WINNERS[key1];
+    if(PENALTY_WINNERS[key2]) return PENALTY_WINNERS[key2];
+    return null;
+  }
+  return hg>ag?h:a;
 }
 function getLoser(h,a,hg,ag){
   if(hg===null||ag===null) return null;
-  return hg>ag?a:ag>hg?h:null;
+  if(hg===ag){
+    var w=getWinner(h,a,hg,ag);
+    if(!w) return null;
+    return w===h?a:h;
+  }
+  return hg>ag?a:h;
 }
 function slotData(bkData){
   if(!bkData) return {h:null,a:null,hg:null,ag:null,st:'pre',date:'',time:'',venue:''};
