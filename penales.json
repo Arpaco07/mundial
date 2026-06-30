@@ -1,0 +1,10 @@
+{
+  "overrides": {
+    "GER-PAR": "PAR",
+    "NED-MAR": "MAR"
+  },
+  "scores": {
+    "GER-PAR": "3-4",
+    "NED-MAR": "2-3"
+  }
+}
