@@ -1189,7 +1189,7 @@ function renderR32() {
     return '<div class="cc"><div class="vs">VS</div><div class="mt">'+(sl.time||'')+'</div><div class="mv">'+(sl.venue||'')+'</div></div>';
   }
   function mkR(hCode, hLabel, aCode, aLabel, sl, hl) {
-    var w = sl.st==='ft'?(sl.hg>sl.ag?hCode:aCode):null;
+    var w = sl.st==='ft'?getWinner(sl.h,sl.a,sl.hg,sl.ag):null;
     var cls = 'mc'+(hl?' hl':'')+(sl.st==='live'?' ln':sl.st==='ft'?' done':'');
     return '<div class="'+cls+'" data-h="'+(hCode||'TBD')+'" data-a="'+(aCode||'TBD')+'">'
       +'<div class="te">'+flagR(hCode)+'<div class="tn">'+(w===hCode&&w?'<b>':'')+nameR(hCode,hLabel)+(w===hCode&&w?'</b>':'')+'</div><div class="tg">&nbsp;</div></div>'
@@ -1290,12 +1290,12 @@ function renderKOSection(containerId, bkRound, bracketData, labelFn) {
     return '<div class="cc"><div class="vs">VS</div><div class="mt">'+(sl.time||'')+'</div><div class="mv">'+(sl.venue||'')+'</div></div>';
   }
   function mkKO(hCode,hLabel,aCode,aLabel,sl,hl) {
-    var w = sl.st==='ft'?(sl.hg>sl.ag?hCode:aCode):null;
+    var w = sl.st==='ft'?getWinner(sl.h,sl.a,sl.hg,sl.ag):null;
     var cls = 'mc'+(hl?' hl':'')+(sl.st==='live'?' ln':sl.st==='ft'?' done':'');
     return '<div class="'+cls+'" data-h="'+(hCode||'TBD')+'" data-a="'+(aCode||'TBD')+'">'
-      +'<div class="te">'+flagKO(hCode)+'<div class="tn">'+nameKO(hCode,hLabel)+'</div><div class="tg">&nbsp;</div></div>'
+      +'<div class="te">'+flagKO(hCode)+'<div class="tn">'+(w===hCode&&w?'<b>':'')+nameKO(hCode,hLabel)+(w===hCode&&w?'</b>':'')+'</div><div class="tg">&nbsp;</div></div>'
       +ccKO(sl)
-      +'<div class="te r">'+flagKO(aCode)+'<div class="tn">'+nameKO(aCode,aLabel)+'</div><div class="tg">&nbsp;</div></div>'
+      +'<div class="te r">'+flagKO(aCode)+'<div class="tn">'+(w===aCode&&w?'<b>':'')+nameKO(aCode,aLabel)+(w===aCode&&w?'</b>':'')+'</div><div class="tg">&nbsp;</div></div>'
       +'</div>';
   }
 
