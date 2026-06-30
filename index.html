@@ -323,6 +323,11 @@ body{background:var(--blk);color:var(--tx);font-family:'Inter',sans-serif;font-s
       </div>
       <div style="font-size:11px;color:var(--mu);margin-bottom:12px">Toca el equipo ganador, luego escribe el marcador de penales (opcional) y guarda.</div>
       <div id="admMatchList"></div>
+      <div id="admJsonLabel" style="display:none;font-size:11px;color:var(--gold);margin-top:14px;margin-bottom:6px">
+        &#9888; Para que TODOS vean este resultado: copia este texto y p&eacute;galo reemplazando todo el contenido del archivo <b>penales.json</b> en tu repo de GitHub (mismo m&eacute;todo que index.html: l&aacute;piz &#9999; &middot; Ctrl+A &middot; pegar &middot; Commit).
+      </div>
+      <textarea id="admJsonBox" readonly style="display:none;width:100%;height:120px;background:var(--p1);border:1px solid var(--gold);border-radius:6px;color:var(--tx);font-family:monospace;font-size:11px;padding:8px;box-sizing:border-box;margin-bottom:8px"></textarea>
+      <button id="admCopyBtn" onclick="copyAdmJson()" style="display:none;width:100%;padding:10px;background:var(--gold);border:none;border-radius:6px;color:#000;font-weight:700;cursor:pointer">Copiar JSON</button>
     </div>
   </div>
 </div>
@@ -1384,6 +1389,25 @@ function getPenScore(h, a) {
   if (!h || !a) return '';
   return _penaltyScores[h+'-'+a] || _penaltyScores[a+'-'+h] || '';
 }
+function showJsonExport() {
+  var box = document.getElementById('admJsonBox');
+  if (!box) return;
+  var json = JSON.stringify({overrides: _penaltyOverrides, scores: _penaltyScores}, null, 2);
+  box.value = json;
+  box.style.display = 'block';
+  document.getElementById('admJsonLabel').style.display = 'block';
+  document.getElementById('admCopyBtn').style.display = 'block';
+}
+function copyAdmJson() {
+  var box = document.getElementById('admJsonBox');
+  box.select();
+  document.execCommand('copy');
+  var btn = document.getElementById('admCopyBtn');
+  var orig = btn.textContent;
+  btn.textContent = 'Copiado!';
+  setTimeout(function(){ btn.textContent = orig; }, 1500);
+}
+
 var ADMIN_PIN = '2786';
 var _penaltyOverrides = {};
 var _penaltyScores = {};
@@ -1405,6 +1429,7 @@ function checkAdminPin() {
     document.getElementById('admPinView').style.display = 'none';
     document.getElementById('admPanelView').style.display = 'block';
     renderAdminMatchList();
+    if (Object.keys(_penaltyOverrides).length > 0) showJsonExport();
   } else {
     document.getElementById('admPinErr').style.display = 'block';
   }
@@ -1493,7 +1518,9 @@ function setPenaltyWinner(h, a, winner) {
   savePenaltyOverrides();
   renderAdminMatchList();
   refreshAllRenders();
+  showJsonExport();
 }
+
 
 function setPenaltyScore(key, score) {
   if (score) {
@@ -1504,36 +1531,46 @@ function setPenaltyScore(key, score) {
   savePenaltyScores();
   renderAdminMatchList();
   refreshAllRenders();
+  showJsonExport();
 }
 
+
 function savePenaltyOverrides() {
-  if (!window.storage) return;
-  window.storage.set('penalty_overrides', JSON.stringify(_penaltyOverrides), true).catch(function(){});
+  try { localStorage.setItem('mundial_penalty_overrides', JSON.stringify(_penaltyOverrides)); } catch(e){}
 }
 function savePenaltyScores() {
-  if (!window.storage) return;
-  window.storage.set('penalty_scores', JSON.stringify(_penaltyScores), true).catch(function(){});
+  try { localStorage.setItem('mundial_penalty_scores', JSON.stringify(_penaltyScores)); } catch(e){}
 }
 
 function loadPenaltyOverrides() {
-  if (!window.storage) return Promise.resolve();
-  var p1 = window.storage.get('penalty_overrides', true).then(function(res) {
-    if (res && res.value) {
+  // Carga primero el archivo compartido penales.json (mismo repo, visible para todos)
+  return fetch('./penales.json?t=' + Date.now())
+    .then(function(r){ return r.ok ? r.json() : {overrides:{},scores:{}}; })
+    .catch(function(){ return {overrides:{},scores:{}}; })
+    .then(function(data){
+      _penaltyOverrides = data.overrides || {};
+      _penaltyScores = data.scores || {};
+      Object.keys(_penaltyOverrides).forEach(function(k){ PENALTY_WINNERS[k] = _penaltyOverrides[k]; });
+      // También revisa localStorage por si hay cambios locales más recientes aún no subidos a GitHub
       try {
-        _penaltyOverrides = JSON.parse(res.value);
-        Object.keys(_penaltyOverrides).forEach(function(k) {
-          PENALTY_WINNERS[k] = _penaltyOverrides[k];
-        });
+        var raw1 = localStorage.getItem('mundial_penalty_overrides');
+        if (raw1) {
+          var local1 = JSON.parse(raw1);
+          Object.keys(local1).forEach(function(k){
+            _penaltyOverrides[k] = local1[k];
+            PENALTY_WINNERS[k] = local1[k];
+          });
+        }
+        var raw2 = localStorage.getItem('mundial_penalty_scores');
+        if (raw2) {
+          var local2 = JSON.parse(raw2);
+          Object.keys(local2).forEach(function(k){ _penaltyScores[k] = local2[k]; });
+        }
       } catch(e){}
-    }
-  }).catch(function(){});
-  var p2 = window.storage.get('penalty_scores', true).then(function(res) {
-    if (res && res.value) {
-      try { _penaltyScores = JSON.parse(res.value); } catch(e){}
-    }
-  }).catch(function(){});
-  return Promise.all([p1, p2]);
+    });
 }
+
+
 
 function refreshAllRenders() {
   renderStandings();
