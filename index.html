@@ -775,7 +775,7 @@ var BRACKET_DATA = {
     {pos:2,   h:'1F', a:'2C', date:'LUN 29 JUN', time:'19:00', venue:'Monterrey'},
     {pos:5,   h:'2E', a:'2I', date:'MAR 30 JUN', time:'11:00', venue:'Dallas'},
     {pos:4,   h:'1I', a:'3F', date:'MAR 30 JUN', time:'15:00', venue:'Nueva Jersey'},
-    {pos:6,   h:'1A', a:'3E', date:'MAR 30 JUN', time:'19:00', venue:'Cd. México'},
+    {pos:6,   h:'1A', a:'3E', date:'MAR 30 JUN', time:'20:00', venue:'Cd. México'},
     {pos:7,   h:'1L', a:'3K', date:'MIÉ 1 JUL', time:'10:00', venue:'Atlanta'},
     {pos:9,   h:'1G', a:'3I', date:'MIÉ 1 JUL', time:'14:00', venue:'Los Ángeles'},
     {pos:8,   h:'1D', a:'3B', date:'MIÉ 1 JUL', time:'18:00', venue:'San Francisco'},
@@ -783,14 +783,14 @@ var BRACKET_DATA = {
     {pos:12,  h:'2K', a:'2L', date:'JUE 2 JUL', time:'17:00', venue:'Vancouver'},
     {pos:10,  h:'1B', a:'3J', date:'JUE 2 JUL', time:'21:00', venue:'Vancouver'},
     {pos:15,  h:'2D', a:'2G', date:'VIE 3 JUL', time:'12:00', venue:'Dallas'},
-    {pos:14,  h:'1J', a:'2H', date:'VIE 3 JUL', time:'17:00', venue:'Miami'},
+    {pos:14,  h:'1J', a:'2H', date:'VIE 3 JUL', time:'16:00', venue:'Miami'},
     {pos:13,  h:'1K', a:'3L', date:'VIE 3 JUL', time:'19:30', venue:'Kansas City'},
   ],
   r16: [
-    {pos:0, h:'W P73', a:'W P75', date:'SÁB 4 JUL', time:'14:00', venue:'Philadelphia'},
-    {pos:1, h:'W P74', a:'W P77', date:'SÁB 4 JUL', time:'17:00', venue:'Houston'},
+    {pos:0, h:'W P73', a:'W P75', date:'SÁB 4 JUL', time:'11:00', venue:'Philadelphia'},
+    {pos:1, h:'W P74', a:'W P77', date:'SÁB 4 JUL', time:'15:00', venue:'Houston'},
     {pos:2, h:'W P76', a:'W P78', date:'DOM 5 JUL', time:'14:00', venue:'Nueva Jersey'},
-    {pos:3, h:'W P79', a:'W P80', date:'DOM 5 JUL', time:'19:00', venue:'Cd. México'},
+    {pos:3, h:'W P79', a:'W P80', date:'DOM 5 JUL', time:'18:00', venue:'Cd. México'},
     {pos:5, h:'W P83', a:'W P84', date:'LUN 6 JUL', time:'15:00', venue:'Seattle'},
     {pos:4, h:'W P81', a:'W P82', date:'LUN 6 JUL', time:'18:00', venue:'Dallas'},
     {pos:7, h:'W P86', a:'W P88', date:'MAR 7 JUL', time:'14:00', venue:'Atlanta'},
@@ -879,7 +879,10 @@ function lookupResult(h,a){
 }
 function applyResult(slot,hCode,aCode,res){
   if(!res) return;
-  if(res.st === 'pre') return; // don't apply 0-0 for unplayed matches
+  // Actualizar hora/venue desde ESPN aunque sea partido pre (para corregir horarios)
+  if(res.time) slot.time = res.time;
+  if(res.venue) slot.venue = res.venue;
+  if(res.st === 'pre') return; // no aplicar marcador 0-0 para no jugados
   var flipped = res.h===aCode;
   slot.hg = flipped?res.ag:res.hg;
   slot.ag = flipped?res.hg:res.ag;
