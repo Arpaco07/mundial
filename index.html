@@ -1335,20 +1335,17 @@ function renderKOSection(containerId, bkRound, bracketData, labelFn) {
 
 function renderR16() {
   renderKOSection('r16-matches', _bk.r16, BRACKET_DATA.r16, function(d,sl) {
-    var p = d.pos;
-    return { h: sl.h ? null : ('W P'+(p*2+73)), a: sl.a ? null : ('W P'+(p*2+74)) };
+    return { h: sl.h ? null : d.h, a: sl.a ? null : d.a };
   });
 }
 function renderQF() {
   renderKOSection('qf-matches', _bk.qf, BRACKET_DATA.qf, function(d,sl) {
-    var p = d.pos;
-    return { h: sl.h ? null : ('Oct.'+(p*2+1)), a: sl.a ? null : ('Oct.'+(p*2+2)) };
+    return { h: sl.h ? null : d.h, a: sl.a ? null : d.a };
   });
 }
 function renderSF() {
   renderKOSection('sf-matches', _bk.sf, BRACKET_DATA.sf, function(d,sl) {
-    var p = d.pos;
-    return { h: sl.h ? null : ('CF '+(p*2+1)), a: sl.a ? null : ('CF '+(p*2+2)) };
+    return { h: sl.h ? null : d.h, a: sl.a ? null : d.a };
   });
 }
 function renderFinal() {
