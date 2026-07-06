@@ -1339,13 +1339,31 @@ function renderR16() {
   });
 }
 function renderQF() {
+  var qfSrc = {0:{h:1,a:0}, 1:{h:5,a:4}, 2:{h:2,a:3}, 3:{h:6,a:7}};
   renderKOSection('qf-matches', _bk.qf, BRACKET_DATA.qf, function(d,sl) {
-    return { h: sl.h ? null : d.h, a: sl.a ? null : d.a };
+    var src = qfSrc[d.pos];
+    function octLabel(r16pos) {
+      var s = _bk.r16[r16pos];
+      if (!s || !s.h || !s.a) return 'Por definir';
+      var hn = TEAMS[s.h] ? TEAMS[s.h].n : s.h;
+      var an = TEAMS[s.a] ? TEAMS[s.a].n : s.a;
+      return 'Gan. '+hn+'/'+an;
+    }
+    return { h: sl.h ? null : octLabel(src.h), a: sl.a ? null : octLabel(src.a) };
   });
 }
 function renderSF() {
+  var sfSrc = {0:{h:0,a:2}, 1:{h:1,a:3}};
   renderKOSection('sf-matches', _bk.sf, BRACKET_DATA.sf, function(d,sl) {
-    return { h: sl.h ? null : d.h, a: sl.a ? null : d.a };
+    var src = sfSrc[d.pos];
+    function qfLabel(qfpos) {
+      var s = _bk.qf[qfpos];
+      if (!s || !s.h || !s.a) return 'Por definir';
+      var hn = TEAMS[s.h] ? TEAMS[s.h].n : s.h;
+      var an = TEAMS[s.a] ? TEAMS[s.a].n : s.a;
+      return 'Gan. '+hn+'/'+an;
+    }
+    return { h: sl.h ? null : qfLabel(src.h), a: sl.a ? null : qfLabel(src.a) };
   });
 }
 function renderFinal() {
