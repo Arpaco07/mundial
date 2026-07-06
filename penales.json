@@ -1,10 +1,12 @@
 {
   "overrides": {
     "GER-PAR": "PAR",
-    "NED-MAR": "MAR"
+    "NED-MAR": "MAR",
+    "AUS-EGY": "EGY"
   },
   "scores": {
     "GER-PAR": "3-4",
-    "NED-MAR": "2-3"
+    "NED-MAR": "2-3",
+    "AUS-EGY": "2-4"
   }
 }
