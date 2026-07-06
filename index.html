@@ -773,12 +773,12 @@ var BRACKET_DATA = {
     {pos:3,   h:'1C', a:'2F', date:'LUN 29 JUN', time:'11:00', venue:'Houston'},
     {pos:1,   h:'1E', a:'3D', date:'LUN 29 JUN', time:'14:30', venue:'Boston'},
     {pos:2,   h:'1F', a:'2C', date:'LUN 29 JUN', time:'19:00', venue:'Monterrey'},
+    {pos:7,   h:'1L', a:'3K', date:'MAR 30 JUN', time:'10:00', venue:'Atlanta'},
     {pos:5,   h:'2E', a:'2I', date:'MAR 30 JUN', time:'11:00', venue:'Dallas'},
     {pos:4,   h:'1I', a:'3F', date:'MAR 30 JUN', time:'15:00', venue:'Nueva Jersey'},
     {pos:6,   h:'1A', a:'3E', date:'MAR 30 JUN', time:'20:00', venue:'Cd. México'},
-    {pos:7,   h:'1L', a:'3K', date:'MIÉ 1 JUL', time:'10:00', venue:'Atlanta'},
+    {pos:8,   h:'1D', a:'3B', date:'MIÉ 1 JUL', time:'10:00', venue:'Atlanta'},
     {pos:9,   h:'1G', a:'3I', date:'MIÉ 1 JUL', time:'14:00', venue:'Los Ángeles'},
-    {pos:8,   h:'1D', a:'3B', date:'MIÉ 1 JUL', time:'18:00', venue:'San Francisco'},
     {pos:11,  h:'1H', a:'2J', date:'JUE 2 JUL', time:'13:00', venue:'Los Ángeles'},
     {pos:12,  h:'2K', a:'2L', date:'JUE 2 JUL', time:'17:00', venue:'Vancouver'},
     {pos:10,  h:'1B', a:'3J', date:'JUE 2 JUL', time:'21:00', venue:'Vancouver'},
@@ -787,24 +787,24 @@ var BRACKET_DATA = {
     {pos:13,  h:'1K', a:'3L', date:'VIE 3 JUL', time:'19:30', venue:'Kansas City'},
   ],
   r16: [
-    {pos:0, h:'W P73', a:'W P75', date:'SÁB 4 JUL', time:'11:00', venue:'Philadelphia'},
-    {pos:1, h:'W P74', a:'W P77', date:'SÁB 4 JUL', time:'15:00', venue:'Houston'},
-    {pos:2, h:'W P76', a:'W P78', date:'DOM 5 JUL', time:'14:00', venue:'Nueva Jersey'},
-    {pos:3, h:'W P79', a:'W P80', date:'DOM 5 JUL', time:'18:00', venue:'Cd. México'},
-    {pos:5, h:'W P83', a:'W P84', date:'LUN 6 JUL', time:'15:00', venue:'Seattle'},
-    {pos:4, h:'W P81', a:'W P82', date:'LUN 6 JUL', time:'18:00', venue:'Dallas'},
-    {pos:7, h:'W P86', a:'W P88', date:'MAR 7 JUL', time:'14:00', venue:'Atlanta'},
-    {pos:6, h:'W P85', a:'W P87', date:'MAR 7 JUL', time:'17:00', venue:'Vancouver'},
+    {pos:0, h:'W P73', a:'W P75', date:'SÁB 4 JUL',  time:'11:00', venue:'Philadelphia'},
+    {pos:1, h:'W P74', a:'W P77', date:'SÁB 4 JUL',  time:'15:00', venue:'Houston'},
+    {pos:2, h:'W P76', a:'W P78', date:'DOM 5 JUL',  time:'14:00', venue:'Nueva Jersey'},
+    {pos:3, h:'W P79', a:'W P80', date:'DOM 5 JUL',  time:'19:00', venue:'Cd. México'},
+    {pos:4, h:'W P81', a:'W P82', date:'LUN 6 JUL',  time:'18:00', venue:'Dallas'},
+    {pos:5, h:'W P85', a:'W P84', date:'LUN 6 JUL',  time:'13:00', venue:'Seattle'},
+    {pos:6, h:'W P87', a:'W P88', date:'MAR 7 JUL',  time:'10:00', venue:'Vancouver'},
+    {pos:7, h:'W P83', a:'W P86', date:'MAR 7 JUL',  time:'14:00', venue:'Atlanta'},
   ],
   qf: [
-    {pos:0, h:'W Oct1', a:'W Oct2', date:'JUE 9 JUL',   time:'14:00', venue:'Boston'},
-    {pos:1, h:'W Oct5', a:'W Oct6', date:'VIE 10 JUL',  time:'17:00', venue:'Los Ángeles'},
-    {pos:2, h:'W Oct3', a:'W Oct4', date:'SÁB 11 JUL', time:'14:00', venue:'Miami'},
-    {pos:3, h:'W Oct7', a:'W Oct8', date:'SÁB 11 JUL', time:'18:00', venue:'Kansas City'},
+    {pos:0, h:'W Oct1', a:'W Oct2', date:'JUE 9 JUL',  time:'14:00', venue:'Houston'},
+    {pos:1, h:'W Oct5', a:'W Oct6', date:'VIE 10 JUL', time:'13:00', venue:'Los Ángeles'},
+    {pos:2, h:'W Oct3', a:'W Oct4', date:'SÁB 11 JUL', time:'15:00', venue:'Dallas'},
+    {pos:3, h:'W Oct7', a:'W Oct8', date:'SÁB 11 JUL', time:'19:00', venue:'Vancouver'},
   ],
   sf: [
-    {pos:0, h:'W CF1', a:'W CF2', date:'MAR 14 JUL', time:'17:00', venue:'Dallas'},
-    {pos:1, h:'W CF3', a:'W CF4', date:'MIÉ 15 JUL', time:'16:00', venue:'Atlanta'},
+    {pos:0, h:'W CF1', a:'W CF2', date:'MAR 14 JUL', time:'13:00', venue:'Dallas'},
+    {pos:1, h:'W CF3', a:'W CF4', date:'MIÉ 15 JUL', time:'13:00', venue:'Atlanta'},
   ],
   third: {h:'L-SF1', a:'L-SF2', date:'SÁB 18 JUL', time:'14:00', venue:'Miami'},
   final: {h:'W-SF1', a:'W-SF2', date:'DOM 19 JUL', time:'13:00', venue:'MetLife · N. Jersey'}
@@ -830,14 +830,14 @@ var R32_TO_R16 = {
   3:{r16:2,side:'h'}, 5:{r16:2,side:'a'},
   6:{r16:3,side:'h'}, 7:{r16:3,side:'a'},
   8:{r16:4,side:'h'}, 9:{r16:4,side:'a'},
-  10:{r16:5,side:'h'},11:{r16:5,side:'a'},
-  12:{r16:6,side:'h'},14:{r16:6,side:'a'},
-  13:{r16:7,side:'h'},15:{r16:7,side:'a'}
+  12:{r16:5,side:'h'},11:{r16:5,side:'a'},
+  14:{r16:6,side:'h'},15:{r16:6,side:'a'},
+  10:{r16:7,side:'h'},13:{r16:7,side:'a'}
 };
 var R16_TO_QF = {
-  0:{qf:0,side:'h'}, 1:{qf:0,side:'a'},
+  1:{qf:0,side:'h'}, 0:{qf:0,side:'a'},
+  5:{qf:1,side:'h'}, 4:{qf:1,side:'a'},
   2:{qf:2,side:'h'}, 3:{qf:2,side:'a'},
-  4:{qf:1,side:'h'}, 5:{qf:1,side:'a'},
   6:{qf:3,side:'h'}, 7:{qf:3,side:'a'}
 };
 var QF_TO_SF = {
